@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/jchou8/sling/handlers"
+	"github.com/jchou8/sling/handler"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
@@ -43,15 +43,15 @@ func runServer(cmd *cobra.Command, args []string) error {
 
 	srv.File("/", "frontend/build")
 	srv.Static("/static", "frontend/build/static")
-	srv.POST("/api/register", handlers.NewUserHandler(conn))
-	srv.POST("/api/login", handlers.LoginHandler(conn))
+	srv.POST("/api/register", handler.NewUserHandler(conn))
+	srv.POST("/api/login", handler.LoginHandler(conn))
 
 	users := srv.Group("api/users")
-	users.Use(handlers.NewTokenAuthMiddleware(conn))
-	users.GET("/", handlers.GetUsersHandler(conn))
-	users.GET("/current", handlers.GetCurrentUserHandler(conn))
+	users.Use(handler.NewTokenAuthMiddleware(conn))
+	users.GET("/", handler.GetUsersHandler(conn))
+	users.GET("/current", handler.GetCurrentUserHandler(conn))
 
-	//srv.GET("/api/rooms", handlers.GetRoomsHandler(conn), handlers.NewTokenAuthMiddleware(conn))
+	//srv.GET("/api/rooms", handler.GetRoomsHandler(conn), handler.NewTokenAuthMiddleware(conn))
 
 	fmt.Println("Listening at localhost:8888...")
 	if err := srv.Start(":8888"); err != nil {

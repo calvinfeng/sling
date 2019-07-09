@@ -19,8 +19,8 @@ func main() {
 	logrus.SetLevel(logrus.DebugLevel)
 
 	root := &cobra.Command{
-		Use:   "userauth",
-		Short: "user authentication service",
+		Use:   "sling",
+		Short: "chat service",
 	}
 
 	root.AddCommand(cmd.RunMigrationsCmd, cmd.RunServerCmd)

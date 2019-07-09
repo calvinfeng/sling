@@ -1,4 +1,4 @@
-package handlers
+package handler
 
 import (
 	"net/http"
@@ -6,7 +6,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 
-	"github.com/jchou8/sling/models"
+	"github.com/jchou8/sling/model"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
 	"github.com/lib/pq"
@@ -31,7 +31,7 @@ type (
 // NewUserHandler returns a handler that creates a new user.
 func NewUserHandler(db *gorm.DB /*, actions chan ActionPayload*/) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		user := &models.User{}
+		user := &model.User{}
 		if err := ctx.Bind(user); err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
@@ -119,7 +119,7 @@ func GetCurrentUserHandler(db *gorm.DB) echo.HandlerFunc {
 // GetUsersHandler returns a handler that gets all current users.
 func GetUsersHandler(db *gorm.DB) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		var users []*models.User
+		var users []*model.User
 
 		if err := db.Find(&users).Error; err != nil {
 			return echo.NewHTTPError(http.StatusNotFound, err)

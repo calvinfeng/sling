@@ -1,13 +1,13 @@
-package handlers
+package handler
 
 import (
-	"github.com/jchou8/sling/models"
+	"github.com/jchou8/sling/model"
 	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func findUserByToken(db *gorm.DB, token string) (*models.User, error) {
-	var user models.User
+func findUserByToken(db *gorm.DB, token string) (*model.User, error) {
+	var user model.User
 	if err := db.Where("jwt_token = ?", token).First(&user).Error; err != nil {
 		return nil, err
 	}
@@ -15,8 +15,8 @@ func findUserByToken(db *gorm.DB, token string) (*models.User, error) {
 	return &user, nil
 }
 
-func findUserByCredentials(db *gorm.DB, c *Credential) (*models.User, error) {
-	var user models.User
+func findUserByCredentials(db *gorm.DB, c *Credential) (*model.User, error) {
+	var user model.User
 	if err := db.Where("name = ?", c.Username).First(&user).Error; err != nil {
 		return nil, err
 	}
