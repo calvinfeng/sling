@@ -17,7 +17,7 @@ func findUserByToken(db *gorm.DB, token string) (*models.User, error) {
 
 func findUserByCredentials(db *gorm.DB, c *Credential) (*models.User, error) {
 	var user models.User
-	if err := db.Where("username = ?", c.Username).First(&user).Error; err != nil {
+	if err := db.Where("name = ?", c.Username).First(&user).Error; err != nil {
 		return nil, err
 	}
 

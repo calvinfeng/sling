@@ -1,10 +1,9 @@
-import React, { Component, ChangeEvent, FormEvent } from 'react';
-
+import React, { Component, FormEvent } from 'react';
+import axios, { AxiosResponse } from 'axios'
 import {
     Container,
     TextField,
-    Button,
-    makeStyles
+    Button
 } from '@material-ui/core'
 
 const initialState = {
@@ -72,15 +71,34 @@ export default class Login extends Component<{}, LoginState> {
     }
 
     tryLogin() {
-        // make server request here
-
-        this.setState({ loading: false })
+        axios.post("api/login", {
+            name: this.state.username,
+            password: this.state.password
+        }).then((res: AxiosResponse) => {
+            localStorage.setItem('jwt_token', res.data.jwt_token)
+            alert("logged in successfully") // TODO: transition to message screen
+        }).catch((err) => {
+            console.log(err)
+            this.setState({ error: 'Invalid username or password.', password: '' })
+        }).finally(() => {
+            this.setState({ loading: false })
+        })
     }
 
     tryRegister() {
-        // make server request here
-        
-        this.setState({ loading: false })
+        axios.post("api/register", {
+            name: this.state.username,
+            email: this.state.email,
+            password: this.state.password
+        }).then((res: AxiosResponse) => {
+            localStorage.setItem('jwt_token', res.data.jwt_token)
+            alert("registered successfully") // TODO: transition to message screen
+        }).catch((err) => {
+            console.log(err)
+            this.setState({ error: 'Invalid credentials.' })
+        }).finally(() => {
+            this.setState({ loading: false })
+        })
     }
 
     render() {

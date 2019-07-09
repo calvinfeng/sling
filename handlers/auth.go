@@ -7,14 +7,14 @@ import (
 
 	"github.com/jchou8/sling/models"
 	"github.com/jinzhu/gorm"
-	"github.com/labstack/echo"
+	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 )
 
 type (
 	// Credential is a payload that captures user submitted credentials.
 	Credential struct {
-		Username string `json:"username"`
+		Username string `json:"name"`
 		Password string `json:"password"`
 	}
 

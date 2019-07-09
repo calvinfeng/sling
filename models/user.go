@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"time"
 )
 
 // User represents a user.
@@ -17,9 +16,7 @@ type User struct {
 	Password string `sql:"-" json:"password,omitempty"`
 
 	// Database only
-	CreatedAt      time.Time `gorm:"column:created_at"      json:"-"`
-	UpdatedAt      time.Time `gorm:"column:updated_at"      json:"-"`
-	PasswordDigest []byte    `gorm:"column:password_digest" json:"-"`
+	PasswordDigest []byte `gorm:"column:password_digest" json:"-"`
 }
 
 // Validate validates a user model.
