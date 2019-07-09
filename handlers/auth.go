@@ -45,6 +45,8 @@ func NewUserHandler(db *gorm.DB) echo.HandlerFunc {
 		user.Password = ""
 		user.PasswordDigest = hashBytes
 
+		//TODO: Generate JWT Token
+
 		if err := db.Create(user).Error; err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
