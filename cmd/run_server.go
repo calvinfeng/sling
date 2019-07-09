@@ -16,6 +16,7 @@ import (
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
 
+// RunServerCmd is the command used to run the server.
 var RunServerCmd = &cobra.Command{
 	Use:   "runserver",
 	Short: "run user authentication server",
@@ -49,6 +50,8 @@ func runServer(cmd *cobra.Command, args []string) error {
 	users.Use(handlers.NewTokenAuthMiddleware(conn))
 	users.GET("/", handlers.GetUsersHandler(conn))
 	users.GET("/current", handlers.GetCurrentUserHandler(conn))
+
+	//srv.GET("/api/rooms", handlers.GetRoomsHandler(conn), handlers.NewTokenAuthMiddleware(conn))
 
 	fmt.Println("Listening at localhost:8888...")
 	if err := srv.Start(":8888"); err != nil {

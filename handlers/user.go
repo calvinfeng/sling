@@ -29,7 +29,7 @@ type (
 )
 
 // NewUserHandler returns a handler that creates a new user.
-func NewUserHandler(db *gorm.DB) echo.HandlerFunc {
+func NewUserHandler(db *gorm.DB /*, actions chan ActionPayload*/) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		user := &models.User{}
 		if err := ctx.Bind(user); err != nil {
@@ -77,6 +77,11 @@ func NewUserHandler(db *gorm.DB) echo.HandlerFunc {
 			}
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
+
+		/*actions <- ActionPayload{
+			actionType: "new_user",
+			userID: user.ID
+		}*/
 
 		return ctx.JSON(http.StatusCreated, user)
 	}
