@@ -1,6 +1,0 @@
-CREATE TABLE rooms (
-    id SERIAL PRIMARY KEY,
-    roomName VARCHAR(255)
-);
-
-CREATE UNIQUE INDEX ON rooms(id);
