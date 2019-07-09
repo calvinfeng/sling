@@ -1,13 +1,13 @@
 package handlers
 
 import (
-	"github.com/calvinfeng/go-academy/userauth/model"
+	"github.com/jchou8/sling/models"
 	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func findUserByToken(db *gorm.DB, token string) (*model.User, error) {
-	var user model.User
+func findUserByToken(db *gorm.DB, token string) (*models.User, error) {
+	var user models.User
 	if err := db.Where("jwt_token = ?", token).First(&user).Error; err != nil {
 		return nil, err
 	}
@@ -15,8 +15,8 @@ func findUserByToken(db *gorm.DB, token string) (*model.User, error) {
 	return &user, nil
 }
 
-func findUserByCredentials(db *gorm.DB, c *Credential) (*model.User, error) {
-	var user model.User
+func findUserByCredentials(db *gorm.DB, c *Credential) (*models.User, error) {
+	var user models.User
 	if err := db.Where("username = ?", c.Username).First(&user).Error; err != nil {
 		return nil, err
 	}

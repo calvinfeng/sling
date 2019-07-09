@@ -3,7 +3,8 @@ package handlers
 import (
 	"net/http"
 
-	"github.com/calvinfeng/go-academy/userauth/model"
+	"github.com/dgrijalva/jwt-go"
+
 	"github.com/jchou8/sling/models"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
@@ -45,7 +46,18 @@ func NewUserHandler(db *gorm.DB) echo.HandlerFunc {
 		user.Password = ""
 		user.PasswordDigest = hashBytes
 
-		//TODO: Generate JWT Token
+		// Generate JWT Token
+		token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+			"name":  user.Name,
+			"email": user.Email,
+		})
+
+		tokenString, err := token.SignedString(hmacSecret)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+		}
+
+		user.JWTToken = tokenString
 
 		if err := db.Create(user).Error; err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
@@ -87,7 +99,7 @@ func GetCurrentUserHandler(db *gorm.DB) echo.HandlerFunc {
 // GetUsersHandler returns a handler that gets all current users.
 func GetUsersHandler(db *gorm.DB) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		var users []*model.User
+		var users []*models.User
 
 		if err := db.Find(&users).Error; err != nil {
 			return echo.NewHTTPError(http.StatusNotFound, err)
