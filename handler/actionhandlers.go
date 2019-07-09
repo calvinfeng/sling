@@ -71,18 +71,32 @@ func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
 
 func (mb *MessageBroker) handleCreateUser(p ActionPayload) {
 	// database is already updated from a user user being created
+	// DATABASE
+	// let userName = fetch the user's name from the database
+	userName = "userName"
+
 	responsePayload = ActionResponsePayload{
-		actionType: "message_history",
-		messageHistory: messageHistory
+		actionType: "new_user",
+		userID: p.userID
+		userName: userName
 	}
 	
 	// broadcast new user message to all users logged on
 	for _,cli:= range mb.clientByID {
 		cli.WriteActionQueue() <- responsePayload
 	}
-
 }
 
 func (mb *MessageBroker) handleCreateRoom(p ActionPayload) {
-	// TODO
+
+	responsePayload = ActionResponsePayload{
+		actionType: "new_user",
+		roomID: p.roomID
+		roomName: p.newRoomName
+	}
+	
+	// broadcast new user message to all users logged on
+	for _,cli:= range mb.clientByID {
+		cli.WriteActionQueue() <- responsePayload
+	}
 }
