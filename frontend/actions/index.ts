@@ -51,17 +51,17 @@ export const loadUsers = users => ({
     users
 })
 
-export const changeRoom = roomID => ({
+export const changeRoom = room => ({
     type: CHANGE_ROOM,
-    roomID
+    room
 })
 
-export const markUnread = roomID => ({
+export const markUnread = room => ({
     type: MARK_UNREAD,
-    roomID
+    room
 })
 
-export const joinRoom = roomID => ({
+export const joinRoom = room => ({
     type: JOIN_ROOM,
-    roomID
+    room
 })
