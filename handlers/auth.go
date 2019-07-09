@@ -3,6 +3,7 @@ package handlers
 import (
 	"net/http"
 
+	"github.com/calvinfeng/go-academy/userauth/model"
 	"github.com/jchou8/sling/models"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo"
@@ -55,8 +56,21 @@ func NewUserHandler(db *gorm.DB) echo.HandlerFunc {
 // LoginHandler returns a handler that logs a user in.
 func LoginHandler(db *gorm.DB) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		//TODO: Implement
-		return nil
+		c := &Credential{}
+		if err := ctx.Bind(c); err != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
+		}
+
+		user, err := findUserByCredentials(db, c)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusUnauthorized, "wrong username or password")
+		}
+
+		return ctx.JSON(http.StatusOK, TokenResponse{
+			Name:     user.Name,
+			Email:    user.Email,
+			JWTToken: user.JWTToken,
+		})
 	}
 
 }
@@ -64,15 +78,24 @@ func LoginHandler(db *gorm.DB) echo.HandlerFunc {
 // GetCurrentUserHandler returns a handler that gets the current user.
 func GetCurrentUserHandler(db *gorm.DB) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		//TODO: Implement
-		return nil
+		return ctx.JSON(http.StatusOK, ctx.Get("current_user"))
 	}
 }
 
 // GetUsersHandler returns a handler that gets all current users.
 func GetUsersHandler(db *gorm.DB) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		//TODO: Implement
-		return nil
+		var users []*model.User
+
+		if err := db.Find(&users).Error; err != nil {
+			return echo.NewHTTPError(http.StatusNotFound, err)
+		}
+
+		// Clear token for security
+		for _, u := range users {
+			u.JWTToken = ""
+		}
+
+		return ctx.JSON(http.StatusOK, users)
 	}
 }
