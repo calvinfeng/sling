@@ -2,12 +2,14 @@ package handlers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/dgrijalva/jwt-go"
 
 	"github.com/jchou8/sling/models"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
+	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -60,6 +62,19 @@ func NewUserHandler(db *gorm.DB) echo.HandlerFunc {
 		user.JWTToken = tokenString
 
 		if err := db.Create(user).Error; err != nil {
+			// Handle duplicate index errors
+			if err.(*pq.Error).Code == "23505" {
+				errStr := err.Error()
+				if strings.Contains(errStr, "email") {
+					return echo.NewHTTPError(http.StatusBadRequest, "Email already in use.")
+				}
+
+				if strings.Contains(errStr, "name") {
+					return echo.NewHTTPError(http.StatusBadRequest, "Username already in use.")
+				}
+
+				return echo.NewHTTPError(http.StatusConflict, err.Error())
+			}
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
