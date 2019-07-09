@@ -3,7 +3,7 @@ package main
 import (
 	"os"
 
-	"github.com/jchou8/sling/cmd"
+	"github.com/calvinfeng/sling/cmd"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"

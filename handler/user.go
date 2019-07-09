@@ -6,7 +6,7 @@ import (
 
 	"github.com/dgrijalva/jwt-go"
 
-	"github.com/jchou8/sling/model"
+	"github.com/calvinfeng/sling/model"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
 	"github.com/lib/pq"

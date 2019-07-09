@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/jchou8/sling/handler"
+	"github.com/calvinfeng/sling/handler"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"

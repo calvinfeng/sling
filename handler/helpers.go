@@ -1,7 +1,7 @@
 package handler
 
 import (
-	"github.com/jchou8/sling/model"
+	"github.com/calvinfeng/sling/model"
 	"github.com/jinzhu/gorm"
 	"golang.org/x/crypto/bcrypt"
 )

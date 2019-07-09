@@ -1,4 +1,4 @@
-module github.com/jchou8/sling
+module github.com/calvinfeng/sling
 
 go 1.12
 
