@@ -29,7 +29,7 @@ class DisplayWindow extends Component<DisplayWindowProps, DisplayWindowState> {
                 <div className="DWlabel">
                     <label>#{this.props.curRoom.name}</label>
                 </div>
-                <div>
+                <div className="DWmessages">
                     {displayMessages}
                 </div>
             </div>

@@ -15,7 +15,7 @@
   
   .messages {
     border: 2px solid  #ffb0cd;
-    height: calc(90vh - 100px);
+    height: calc(90vh - 60px);
     overflow-y: scroll;
     overflow-x: hidden;
     margin-bottom: 10px;
@@ -24,5 +24,5 @@
   .inputs {
     border: 2px solid  #ffb0cd;
     padding: 10px 10px;
-    height: 100px;
+    height: 60px;
   }

@@ -43,9 +43,12 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     // private msgWebsocket: WebSocket
     // private actWebsocket: WebSocket
     readonly state: MessagePageState = initialState
+    private messagesEnd = React.createRef<HTMLDivElement>()
 
     componentDidMount() {
         // TODO: Fetch initial states
+
+        this.scrollToBottom()
 
         // // Set up websocket handlers
         // this.msgWebsocket = new WebSocket("ws://localhost:8000/streams/messages")
@@ -105,6 +108,10 @@ class MessagePage extends React.Component<Props, MessagePageState> {
         // TODO: load next room's messages
     }
 
+    scrollToBottom = () => {
+        this.messagesEnd.current!.scrollIntoView({ behavior: "smooth" });
+    }
+
     render() {
         console.log(this.props)
         return (
@@ -126,6 +133,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                             curRoom={this.props.curRoom!}
                             messages={this.props.messages}
                         />
+                        <div style={{ float: "left", clear: "both" }} ref={this.messagesEnd}></div>
                     </div>
                     <div className="inputs">
                         <InputBox
