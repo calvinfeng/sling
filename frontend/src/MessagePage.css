@@ -1,0 +1,25 @@
+.left-div {
+    float: left;
+    width: 20%;
+    height: 400px;
+    margin: 30px 30px;
+    
+    overflow: hidden;
+  }
+  
+  .right-div {
+    overflow: hidden;
+    margin: 30px 30px;
+  }
+  
+  .messages {
+    border: 2px solid  #ffb0cd;
+    height: 350px;
+    margin-bottom: 10px;
+  }
+  
+  .inputs {
+    border: 2px solid  #ffb0cd;
+    padding: 10px 10px;
+    height: 120px;
+  }
