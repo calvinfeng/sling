@@ -5,9 +5,9 @@ import Login from './components/Login'
 
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
-import slingApp from './reducers';
+import rootReducer from './reducers';
 
-const store = createStore(slingApp)
+const store = createStore(rootReducer)
 
 const App: React.FC = () => {
   return (

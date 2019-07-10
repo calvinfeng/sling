@@ -1,67 +1,71 @@
-// Define action constants
-export const LOG_IN = 'LOG_IN'
-export const LOG_OUT = 'LOG_OUT'
-export const NEW_ROOM = 'NEW_ROOM'
-export const NEW_MESSAGE = 'NEW_MESSAGE'
-export const NEW_USER = 'NEW_USER'
-export const LOAD_ROOMS = 'LOAD_ROOMS'
-export const LOAD_MESSAGES = 'LOAD_MESSAGES'
-export const LOAD_USERS = 'LOAD_USERS'
-export const CHANGE_ROOM = 'CHANGE_ROOM'
-export const MARK_UNREAD = 'MARK_UNREAD'
-export const JOIN_ROOM = 'JOIN_ROOM'
+// Import types
+import { User, Message, Room } from '../types'
+import { 
+    LOG_IN,
+    LOG_OUT,
+    NEW_ROOM,
+    NEW_MESSAGE,
+    NEW_USER,
+    LOAD_ROOMS,
+    LOAD_MESSAGES,
+    LOAD_USERS,
+    CHANGE_ROOM,
+    MARK_UNREAD,
+    JOIN_ROOM,
+    AppActionTypes
+} from './types'
 
 // Define action creators
-export const logIn = user => ({
+export const logIn = (user: User): AppActionTypes => ({
     type: LOG_IN,
     user
 })
 
-export const logOut = () => ({
+export const logOut = (): AppActionTypes => ({
     type: LOG_OUT
 })
 
-export const newRoom = room => ({
+export const newRoom = (room: Room): AppActionTypes => ({
     type: NEW_ROOM,
     room
 })
 
-export const newMessage = message => ({
+export const newMessage = (message: Message): AppActionTypes => ({
     type: NEW_MESSAGE,
     message
 })
 
-export const newUser = user => ({
+export const newUser = (user: User): AppActionTypes => ({
     type: NEW_USER,
     user
 })
 
-export const loadRooms = rooms => ({
+export const loadRooms = (rooms: Room[]): AppActionTypes => ({
     type: LOAD_ROOMS,
     rooms
 })
 
-export const loadMessages = messages => ({
+export const loadMessages = (messages: Message[]): AppActionTypes => ({
     type: LOAD_MESSAGES,
     messages
 })
 
-export const loadUsers = users => ({
+export const loadUsers = (users: User[]): AppActionTypes => ({
     type: LOAD_USERS,
     users
 })
 
-export const changeRoom = room => ({
+export const changeRoom = (room: Room): AppActionTypes => ({
     type: CHANGE_ROOM,
     room
 })
 
-export const markUnread = room => ({
+export const markUnread = (room: Room): AppActionTypes => ({
     type: MARK_UNREAD,
     room
 })
 
-export const joinRoom = room => ({
+export const joinRoom = (room: Room): AppActionTypes => ({
     type: JOIN_ROOM,
     room
 })

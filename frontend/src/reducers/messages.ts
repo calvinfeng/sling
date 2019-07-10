@@ -3,9 +3,12 @@ import {
     NEW_MESSAGE,
     LOAD_MESSAGES,
     CHANGE_ROOM,
-} from '../actions'
+    AppActionTypes
+} from '../actions/types'
 
-export default function messages(state = [], action) {
+import { Message } from '../types'
+
+export default function messages(state: Message[] = [], action: AppActionTypes) {
     switch (action.type) {
         case LOG_OUT:
             return []

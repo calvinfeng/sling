@@ -5,7 +5,7 @@ import curRoom from './curRoom'
 import users from './users'
 import messages from './messages'
 
-const slingApp = combineReducers({
+const rootReducer = combineReducers({
     curUser,
     rooms,
     curRoom,
@@ -13,4 +13,4 @@ const slingApp = combineReducers({
     messages
 })
 
-export default slingApp
+export type AppState = ReturnType<typeof rootReducer>

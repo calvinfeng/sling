@@ -1,13 +1,16 @@
 import {
     LOG_OUT,
     CHANGE_ROOM,
-    JOIN_ROOM
-} from '../actions'
+    JOIN_ROOM,
+    AppActionTypes
+} from '../actions/types'
 
-export default function curRoom(state = {}, action) {
+import { Room } from '../types'
+
+export default function curRoom(state: Room | undefined | null, action: AppActionTypes): Room | undefined | null {
     switch (action.type) {
         case LOG_OUT:
-            return {}
+            return null
         case CHANGE_ROOM:
             action.room.hasNotification = false
             return action.room

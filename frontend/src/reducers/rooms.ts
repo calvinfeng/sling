@@ -2,10 +2,13 @@ import {
     LOG_OUT,
     NEW_ROOM,
     LOAD_ROOMS,
-    MARK_UNREAD
-} from '../actions'
+    MARK_UNREAD,
+    AppActionTypes
+} from '../actions/types'
 
-export default function rooms(state = [], action) {
+import { Room } from '../types'
+
+export default function rooms(state: Room[] = [], action: AppActionTypes): Room[] {
     switch (action.type) {
         case LOG_OUT:
             return []
@@ -14,11 +17,13 @@ export default function rooms(state = [], action) {
         case LOAD_ROOMS:
             return action.rooms
         case MARK_UNREAD:
-            return state.slice().forEach((room) => {
+            let newState = state.slice()
+            newState.forEach((room) => {
                 if (room.id === action.room.id) {
                     room.hasNotification = true
                 }
             })
+            return newState
         default:
             return state
     }
