@@ -29,7 +29,7 @@ class ReduxTester extends Component<Props, AppState> {
 
     render() {
         return (
-            <div>hey</div>
+            <div></div>
         )
     }
 }

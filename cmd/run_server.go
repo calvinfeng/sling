@@ -41,8 +41,8 @@ func runServer(cmd *cobra.Command, args []string) error {
 		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
 	}))
 
-	srv.File("/", "frontend/build")
-	srv.Static("/static", "frontend/build/static")
+	srv.File("/", "public/index.html")
+	srv.Static("/assets", "public/assets")
 	srv.POST("/api/register", handler.NewUserHandler(conn))
 	srv.POST("/api/login", handler.LoginHandler(conn))
 
