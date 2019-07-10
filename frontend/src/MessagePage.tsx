@@ -29,6 +29,10 @@ const mapDispatchToProps = (dispatch: React.Dispatch<AppActionTypes>) => {
     return {
         onLogOut: () => {
             dispatch(actions.logOut())
+        },
+        onChangeRoom: (room: Room) => {
+            console.log(room)
+            dispatch(actions.changeRoom(room))
         }
     }
 }
@@ -95,6 +99,10 @@ class MessagePage extends React.Component<Props, MessagePageState> {
 
     }
 
+    changeRoom(nextRoom: Room) {
+        this.props.onChangeRoom(nextRoom)
+    }
+
     render() {
         console.log(this.props)
         return (
@@ -106,6 +114,8 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                         rooms={this.props.rooms}
                         users={this.props.users}
                         logOut={this.props.setLoggedOut}
+
+                        changeRoom={(room: Room) => this.changeRoom(room)}
                     />
                 </div>
                 <div className="right-div">

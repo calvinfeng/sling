@@ -9,7 +9,9 @@ export interface SideBarProps {
     curRoom: Room | null
     users: User[]
     rooms: Room[]
+
     logOut: Function
+    changeRoom: Function
 }
 
 export interface SideBarState {
@@ -59,11 +61,23 @@ class SideBar extends Component<SideBarProps, SideBarState> {
         const { hasJoined, isDirectMsg, findDirectMsgName, getClassName, isNotDirectMsg } = this;
 
         const listItems = this.props.rooms.filter(hasJoined).filter(isNotDirectMsg).map((room) =>
-            <li className={`SBroom ${getClassName(room)}`} key={room.id}>{room.name}</li>
+            <li
+                className={`SBroom ${getClassName(room)}`}
+                key={room.id}
+                onClick={(e) => this.props.changeRoom(room)}
+            >
+                {room.name}
+            </li>
         );
 
         const userItems = this.props.rooms.filter(isDirectMsg).map((room) =>
-            <li className={`SBroom ${getClassName(room)}`} key={room.id}>{findDirectMsgName(room.name)}</li>
+            <li
+                className={`SBroom ${getClassName(room)}`}
+                key={room.id}
+                onClick={(e) => this.props.changeRoom(room)}
+            >
+                {findDirectMsgName(room.name)}
+            </li>
         );
 
         let moreUser = (<label onClick={this.handleDisplayMoreUser} className="SBlabel">+ More People</label>);
