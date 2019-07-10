@@ -101,6 +101,8 @@ class MessagePage extends React.Component<Props, MessagePageState> {
 
     changeRoom(nextRoom: Room) {
         this.props.onChangeRoom(nextRoom)
+
+        // TODO: load next room's messages
     }
 
     render() {

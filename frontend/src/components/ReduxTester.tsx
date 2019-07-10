@@ -42,12 +42,30 @@ class ReduxTester extends Component<Props, AppState> {
         ])
         this.props.changeRooms(curRoom)
         this.props.loadMessages([
-            { username: "Alice", body: "hello1", time: new Date() },
+            { username: "Alice", body: "hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1v", time: new Date() },
             { username: "Bob", body: "hello2", time: new Date() },
-            { username: "Calvin", body: "hello3", time: new Date() },
+            { username: "Calvin", body: "hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1v", time: new Date() },
             { username: "Bob", body: "hello4", time: new Date() },
             { username: "Alice", body: "hello5", time: new Date() },
-            { username: "Bob", body: "hello6", time: new Date() },
+            { username: "Bob", body: "hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1v", time: new Date() },
+            { username: "Calvin", body: "hello7", time: new Date() },
+            { username: "Alice", body: "hello5", time: new Date() },
+            { username: "Bob", body: "hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1v", time: new Date() },
+            { username: "Calvin", body: "hello7", time: new Date() },
+            { username: "Alice", body: "hello5", time: new Date() },
+            { username: "Bob", body: "hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1v", time: new Date() },
+            { username: "Calvin", body: "hello7", time: new Date() },
+            { username: "Alice", body: "hello5", time: new Date() },
+            { username: "Bob", body: "hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1v", time: new Date() },
+            { username: "Calvin", body: "hello7", time: new Date() },
+            { username: "Alice", body: "hello5", time: new Date() },
+            { username: "Bob", body: "hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1v", time: new Date() },
+            { username: "Calvin", body: "hello7", time: new Date() },
+            { username: "Alice", body: "hello5", time: new Date() },
+            { username: "Bob", body: "hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1v", time: new Date() },
+            { username: "Calvin", body: "hello7", time: new Date() },
+            { username: "Alice", body: "hello5", time: new Date() },
+            { username: "Bob", body: "hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1v", time: new Date() },
             { username: "Calvin", body: "hello7", time: new Date() },
         ])
 

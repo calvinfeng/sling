@@ -74,6 +74,7 @@
 
 .DWmessagebody {
     font-size: 16px;
+    overflow-wrap: break-word;
 }
 
 .input-box {
