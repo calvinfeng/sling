@@ -1,0 +1,46 @@
+.SBcurUser {
+    font-size: 20px;
+    height: 30px;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.SBlabel {
+    font-size: 16px;
+    padding:20px 10px;
+}
+
+.SBlist  {
+    list-style-type: none;
+}
+.SBlist > li {
+    height: 20px;
+    width: 80px;
+    padding: 5px;
+    margin-top: 2px;
+}
+.curroom {
+    font-weight: bold;
+    border-radius: 10px
+}
+
+.notification {
+    border: 1px solid red;
+    border-radius: 10px
+}
+
+.normal {
+    border-radius: 10px
+}
+
+.DWlabel {
+    font-size: 16px;
+    height: 30px;
+    text-align: center;
+    padding-top:5px;
+}
+
+.DWmessage {
+    padding-left:20px;
+    padding-bottom: 10px;
+}
