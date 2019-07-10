@@ -7,7 +7,7 @@ import {
 
 import { Room } from '../types'
 
-export default function curRoom(state: Room | undefined | null, action: AppActionTypes): Room | undefined | null {
+export default function curRoom(state: Room | null = null, action: AppActionTypes): Room | null {
     switch (action.type) {
         case LOG_OUT:
             return null

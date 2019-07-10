@@ -6,7 +6,7 @@ import {
 
 import { User } from '../types'
 
-export default function curUser(state: User | undefined | null, action: AppActionTypes): User | undefined | null {
+export default function curUser(state: User | null = null, action: AppActionTypes): User | null {
     switch (action.type) {
         case LOG_IN:
             return Object.assign({}, action.user)
