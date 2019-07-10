@@ -7,8 +7,6 @@ import {
     Button
 } from '@material-ui/core'
 import { User } from '../types'
-
-import { AppState } from '../store'
 import { logIn } from '../actions'
 import { AppActionTypes } from '../actions/types'
 
@@ -130,6 +128,7 @@ class Login extends Component<Props, LoginState> {
                 <h1>{this.state.login ? 'Login' : 'Register'}</h1>
 
                 <div>
+                    {this.state.login ? 'Need an account? ' : 'Already have an account? '}
                     <Button
                         disabled={this.state.loading}
                         variant='contained'
