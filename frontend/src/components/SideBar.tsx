@@ -12,6 +12,7 @@ export interface SideBarProps {
 
     logOut: Function
     changeRoom: Function
+    startDM: Function
 }
 
 export interface SideBarState {
@@ -25,6 +26,11 @@ class SideBar extends Component<SideBarProps, SideBarState> {
         this.state = {
             displayMore: false,
         };
+    }
+
+
+    shouldComponentUpdate(nextProps: SideBarProps): boolean {
+        return true
     }
 
     handleDisplayMoreUser = () => {
@@ -57,12 +63,24 @@ class SideBar extends Component<SideBarProps, SideBarState> {
         return "normal";
     }
 
+    renderUserList = () => {
+        return this.props.users.map((user) =>
+            <li
+                className="SBhoverable"
+                key={user.id}
+                onClick={(e) => this.props.startDM(user)}
+            >
+                {user.username}
+            </li>
+        )
+    }
+
     render() {
         const { hasJoined, isDirectMsg, findDirectMsgName, getClassName, isNotDirectMsg } = this;
 
         const listItems = this.props.rooms.filter(hasJoined).filter(isNotDirectMsg).map((room) =>
             <li
-                className={`SBroom ${getClassName(room)}`}
+                className={`SBhoverable ${getClassName(room)}`}
                 key={room.id}
                 onClick={(e) => this.props.changeRoom(room)}
             >
@@ -72,7 +90,7 @@ class SideBar extends Component<SideBarProps, SideBarState> {
 
         const userItems = this.props.rooms.filter(isDirectMsg).map((room) =>
             <li
-                className={`SBroom ${getClassName(room)}`}
+                className={`SBhoverable ${getClassName(room)}`}
                 key={room.id}
                 onClick={(e) => this.props.changeRoom(room)}
             >
@@ -80,16 +98,12 @@ class SideBar extends Component<SideBarProps, SideBarState> {
             </li>
         );
 
-        let moreUser = (<label onClick={this.handleDisplayMoreUser} className="SBlabel">+ More People</label>);
+        let moreUser = (<label onClick={this.handleDisplayMoreUser} className="SBlabel SBhoverable">+ More People</label>);
         if (this.state.displayMore) {
             moreUser = (
                 <div>
-                    <label onClick={this.handleDisplayMoreUser} className="SBlabel">+ More People</label>
-                    <ul className="SBlist">
-                        {this.props.users.map((user) =>
-                            <li key={user.id}> {user.username} </li>
-                        )}
-                    </ul>
+                    <label onClick={this.handleDisplayMoreUser} className="SBlabel SBhoverable">- More People</label>
+                    <ul className="SBlist">{this.renderUserList()}</ul>
                 </div>
             );
         }

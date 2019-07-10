@@ -14,10 +14,14 @@ import { User, Room, Message } from './types'
 
 interface MessagePageState {
     inputEnabled: boolean
+    error: string
+    loading: boolean
 }
 
 const initialState: MessagePageState = {
-    inputEnabled: true
+    inputEnabled: false,
+    error: '',
+    loading: true
 }
 
 type OwnProps = {
@@ -30,10 +34,33 @@ const mapDispatchToProps = (dispatch: React.Dispatch<AppActionTypes>) => {
         onLogOut: () => {
             dispatch(actions.logOut())
         },
+
+        onLoadMessages: (messages: Message[]) => {
+            dispatch(actions.loadMessages(messages))
+        },
+        onLoadRooms: (rooms: Room[]) => {
+            dispatch(actions.loadRooms(rooms))
+        },
+        onLoadUsers: (users: User[]) => {
+            dispatch(actions.loadUsers(users))
+        },
+
+        onNewMessage: (message: Message) => {
+            dispatch(actions.newMessage(message))
+        },
+        onNewRoom: (room: Room) => {
+            dispatch(actions.newRoom(room))
+        },
+        onNewUser: (user: User) => {
+            dispatch(actions.newUser(user))
+        },
+
+        onJoinRoom: (room: Room) => {
+            dispatch(actions.joinRoom(room))
+        },
         onChangeRoom: (room: Room) => {
-            console.log(room)
             dispatch(actions.changeRoom(room))
-        }
+        },
     }
 }
 
@@ -46,9 +73,35 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     private messagesEnd = React.createRef<HTMLDivElement>()
 
     componentDidMount() {
-        // TODO: Fetch initial states
+        // Fetch users
+        let usersPromise = axios.get('api/users/', {
+            headers: {
+                'Token': localStorage.getItem('jwt_token')
+            }
+        }).then((res: AxiosResponse) => {
+            this.props.onLoadUsers(res.data.map((user: any): User => ({
+              username: user.name,
+              id: user.id
+            })))
+        })
 
-        this.scrollToBottom()
+        // Fetch rooms
+        let roomsPromise = axios.get('api/rooms', {
+            headers: {
+                'Token': localStorage.getItem('jwt_token')
+            }
+        }).then((res: AxiosResponse) => {
+            // TODO: transform json response into Room type 
+            this.props.onLoadRooms(res.data)
+        })
+
+        Promise.all([usersPromise, roomsPromise]).catch((err) => {
+            console.log(err)
+            this.setState({ error: 'Could not fetch rooms.' })
+        }).finally(() => {
+            console.log(this.state)
+            this.setState({ loading: false })
+        })
 
         // // Set up websocket handlers
         // this.msgWebsocket = new WebSocket("ws://localhost:8000/streams/messages")
@@ -103,9 +156,16 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     }
 
     changeRoom(nextRoom: Room) {
+        this.setState({ inputEnabled: true })
         this.props.onChangeRoom(nextRoom)
 
         // TODO: load next room's messages
+    }
+
+    startDM(user: User) {
+        console.log(user)
+
+        //TODO: start DM
     }
 
     scrollToBottom = () => {
@@ -122,9 +182,10 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                         curRoom={this.props.curRoom}
                         rooms={this.props.rooms}
                         users={this.props.users}
-                        logOut={this.props.setLoggedOut}
 
+                        logOut={this.props.setLoggedOut}
                         changeRoom={(room: Room) => this.changeRoom(room)}
+                        startDM={(user: User) => this.startDM(user)}
                     />
                 </div>
                 <div className="right-div">

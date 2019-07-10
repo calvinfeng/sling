@@ -20,7 +20,10 @@ const mapDispatchToProps = (dispatch: Dispatch<AppActionTypes>) => {
         },
         loadMessages: (messages: Message[]) => {
             dispatch(actions.loadMessages(messages))
-        }
+        },
+        loadUsers: (users: User[]) => {
+            dispatch(actions.loadUsers(users))
+        },
     }
 }
 type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>
@@ -67,6 +70,11 @@ class ReduxTester extends Component<Props, AppState> {
             { username: "Alice", body: "hello5", time: new Date() },
             { username: "Bob", body: "hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1hello1v", time: new Date() },
             { username: "Calvin", body: "hello7", time: new Date() },
+        ])
+        this.props.loadUsers([
+            { username: "Alice" },
+            { username: "Bob" },
+            { username: "Calvin" }
         ])
 
     }

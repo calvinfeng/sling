@@ -21,11 +21,11 @@
     margin-top: 2px;
 }
 
-.SBroom {
+.SBhoverable {
     cursor: pointer;
 }
 
-.SBroom:hover {
+.SBhoverable:hover {
     background-color: #bbb
 }
 
