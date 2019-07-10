@@ -14,26 +14,27 @@ import (
 	"fmt"
 	"github.com/calvinfeng/sling/util"
 	"github.com/gorilla/websocket"
-	"github.com/labstack/echo/v4"
+	_ "github.com/labstack/echo/v4"
+	"sync"
 	"time"
 )
 
 type Client interface {
-	RoomId() string
-	UserId() string
-	MessageListen()
-	ActionListen()
-	Activate(messageCtx echo.Context, actionCtx echo.Context)
-	WriteMessageQueue() chan<- MessagePayload
-	WriteActionQueue() chan<- ActionPayload
+	RoomID() uint
+	UserID() uint
+	MessageListen(sync.WaitGroup)
+	ActionListen(sync.WaitGroup)
+	Activate(ctx context.Context)
+	WriteMessageQueue() chan<- MessageResponsePayload
+	WriteActionQueue() chan<- ActionResponsePayload
 	SetSendAction(chan ActionPayload)
 	SetSendMessage(chan MessagePayload)
-	SetRoomID(string)
+	SetRoomID(uint)
 }
 
 type WebSocketClient struct {
-	roomID       string
-	userID       string
+	roomID       uint
+	userID       uint
 	connMessage  *websocket.Conn
 	connAction   *websocket.Conn
 	readMessage  chan json.RawMessage        // read next message
@@ -44,10 +45,10 @@ type WebSocketClient struct {
 	sendAction   chan ActionPayload
 }
 
-func newWebSocketClient(messageConn *websocket.Conn, actionConn *websocket.Conn, userID string) Client {
+func newWebSocketClient(messageConn *websocket.Conn, actionConn *websocket.Conn, userID uint) Client {
 	return &WebSocketClient{
 		userID:       userID,
-		roomID:       nil,
+		roomID:       0,
 		connMessage:  messageConn,
 		connAction:   actionConn,
 		readMessage:  make(chan json.RawMessage, 200),        // read next message
@@ -60,16 +61,16 @@ func newWebSocketClient(messageConn *websocket.Conn, actionConn *websocket.Conn,
 }
 
 // UserID : returns userId, the user_id value in the database related to this client
-func (c *WebSocketClient) UserID() string {
+func (c *WebSocketClient) UserID() uint {
 	return c.userID
 }
 
 // RoomID : returns roomId, the room_id value in the database for this client
-func (c *WebSocketClient) RoomID() string {
+func (c *WebSocketClient) RoomID() uint {
 	return c.roomID
 }
 
-func (c *WebSocketClient) SetRoomID(roomID string) {
+func (c *WebSocketClient) SetRoomID(roomID uint) {
 	c.roomID = roomID
 }
 
@@ -82,7 +83,7 @@ func (c *WebSocketClient) MessageListen(wg sync.WaitGroup) {
 
 		if err != nil &&
 			websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
-			util.LogInfo(fmt.Sprintf("Client %s is listening", c.id))
+			util.LogInfo(fmt.Sprintf("Client %s is listening", c.userID))
 			return
 		}
 
@@ -104,7 +105,7 @@ func (c *WebSocketClient) ActionListen(wg sync.WaitGroup) {
 
 		if err != nil &&
 			websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
-			util.LogInfo(fmt.Sprintf("Client %s is listening", c.id))
+			util.LogInfo(fmt.Sprintf("Client %s is listening", c.UserID))
 			return
 		}
 
@@ -157,7 +158,7 @@ func (c *WebSocketClient) readMessageLoop(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done(): // read loop is closed
-			util.LogInfo(fmt.Sprintf("client %s has terminated read message loop", c.id))
+			util.LogInfo(fmt.Sprintf("client %s has terminated read message loop", c.UserID))
 			return
 
 		case bytes := <-c.readMessage: // read bytes detected in channel
@@ -177,7 +178,7 @@ func (c *WebSocketClient) readMessageLoop(ctx context.Context) {
 
 // readActionLoop : continuously reads from connAction for new actions, and
 // forwards them to the message broker
-func (c *WebSocketClient) readMessageLoop(ctx context.Context) {
+func (c *WebSocketClient) readActionLoop(ctx context.Context) {
 	c.connAction.SetReadDeadline(time.Now().Add(2 * time.Second))
 	c.connAction.SetPongHandler(func(s string) error {
 		c.connAction.SetReadDeadline(time.Now().Add(2 * time.Second))
@@ -187,7 +188,7 @@ func (c *WebSocketClient) readMessageLoop(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done(): // read loop is closed
-			util.LogInfo(fmt.Sprintf("client %s has terminated read action loop", c.id))
+			util.LogInfo(fmt.Sprintf("client %s has terminated read action loop", c.UserID))
 			return
 
 		case bytes := <-c.readAction: // read bytes detected in channel
@@ -214,7 +215,7 @@ func (c *WebSocketClient) writeMessageLoop(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done(): // write loop is closed
-			util.LogInfo(fmt.Sprintf("client %s has terminated write loop", c.id))
+			util.LogInfo(fmt.Sprintf("client %s has terminated write loop", c.UserID))
 			return
 		case p := <-c.writeMessage: // message broker wants to write to client
 			c.connMessage.SetReadDeadline(time.Now().Add(2 * time.Second))
@@ -248,7 +249,7 @@ func (c *WebSocketClient) writeActionLoop(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done(): // write loop is closed
-			util.LogInfo(fmt.Sprintf("client %s has terminated write loop", c.id))
+			util.LogInfo(fmt.Sprintf("client %s has terminated write loop", c.UserID))
 			return
 		case p := <-c.writeAction: // message broker wants to write to client
 			c.connAction.SetReadDeadline(time.Now().Add(2 * time.Second))

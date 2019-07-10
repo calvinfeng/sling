@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/calvinfeng/sling/util"
 	"net/http"
 	"strings"
 
@@ -96,6 +97,7 @@ func LoginHandler(db *gorm.DB) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
 
+		util.LogInfo(c.Username)
 		user, err := findUserByCredentials(db, c)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusUnauthorized, "wrong username or password")

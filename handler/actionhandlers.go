@@ -18,18 +18,18 @@ func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 	// update groupByRoomID
 	cli := mb.clientByID[p.userID]
 	cli.SetRoomID(p.newRoomID)
-	if mb.groupByRoomID[p.newRoomID]==nil {
-		mb.groupByRoomID[p.newRoomID] = make(map[string]Client)
+	if mb.groupByRoomID[p.newRoomID] == nil {
+		mb.groupByRoomID[p.newRoomID] = make(map[uint]Client)
 	}
-	delete(mb.groupByRoomID[p.roomID],p.userID)
-	mb.groupByRoomID[p.newRoomID][p.userID]=cli
+	delete(mb.groupByRoomID[p.roomID], p.userID)
+	mb.groupByRoomID[p.newRoomID][p.userID] = cli
 
 	// DATABASE fetch list of messages in p.newRoomID
 	// let messageHistory = list of messages type *model.Message (from dataModel)
-	messageHistory := []*model.Message
+	var messageHistory []*model.Message
 
-	responsePayload = ActionResponsePayload{
-		actionType: "message_history",
+	responsePayload := ActionResponsePayload{
+		actionType:     "message_history",
 		messageHistory: messageHistory,
 	}
 
@@ -42,25 +42,25 @@ func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
 	// DATABASE update usersrooms to mark new room as unread
 
 	// return the new roomID and roomName
-	roomID := "roomID"
+	var roomID uint = 0
 	roomName := "roomName"
 
-	responsePayload = ActionResponsePayload{
+	responsePayload := ActionResponsePayload{
 		actionType: "create_dm",
-		roomId: roomID,
-		roomName: roomName,
+		roomID:     roomID,
+		roomName:   roomName,
 	}
 
 	// update group by roomID
 	cli := mb.clientByID[p.userID]
-	if mb.groupByRoomID[roomID]==nil {
-		mb.groupByRoomID[roomID] = make(map[string]Client)
+	if mb.groupByRoomID[roomID] == nil {
+		mb.groupByRoomID[roomID] = make(map[uint]Client)
 	}
-	if mb.groupByRoomID[cli.RoomID()]!=nil {
-		delete(mb.groupByRoomID[cli.RoomID()],p.userID)
+	if mb.groupByRoomID[cli.RoomID()] != nil {
+		delete(mb.groupByRoomID[cli.RoomID()], p.userID)
 	}
-	cli.RoomID = roomID
-	mb.groupByRoomID[roomID][p.userID]=cli
+	cli.SetRoomID(roomID)
+	mb.groupByRoomID[roomID][p.userID] = cli
 
 	// send new dm notification to users logged on
 	if cli, ok := mb.clientByID[p.dmUserID]; ok {
@@ -74,23 +74,23 @@ func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
 
 	// DATABASE fetch list of messages in p.newRoomID
 	// let messageHistory = list of messages type *model.Message (from dataModel)
-	messageHistory := []*model.Message
+	var messageHistory []*model.Message
 
 	responsePayload := ActionResponsePayload{
-		actionType: "message_history",
+		actionType:     "message_history",
 		messageHistory: messageHistory,
 	}
 
 	// update group by roomID
 	cli := mb.clientByID[p.userID]
-	if mb.groupByRoomID[p.newRoomID]==nil {
-		mb.groupByRoomID[p.newRoomID] = make(map[string]Client)
+	if mb.groupByRoomID[p.newRoomID] == nil {
+		mb.groupByRoomID[p.newRoomID] = make(map[uint]Client)
 	}
-	if mb.groupByRoomID[cli.RoomID()]!=nil {
-		delete(mb.groupByRoomID[cli.RoomID()],p.userID)
+	if mb.groupByRoomID[cli.RoomID()] != nil {
+		delete(mb.groupByRoomID[cli.RoomID()], p.userID)
 	}
-	cli.RoomID = p.newRoomID
-	mb.groupByRoomID[p.newRoomID][p.userID]=cli
+	cli.SetRoomID(p.newRoomID)
+	mb.groupByRoomID[p.newRoomID][p.userID] = cli
 
 	cli.WriteActionQueue() <- responsePayload
 }
@@ -103,12 +103,12 @@ func (mb *MessageBroker) handleCreateUser(p ActionPayload) {
 
 	responsePayload := ActionResponsePayload{
 		actionType: "new_user",
-		userID: p.userID,
-		userName: userName,
+		userID:     p.userID,
+		userName:   userName,
 	}
 
 	// broadcast new user message to all users logged on
-	for _,cli:= range mb.clientByID {
+	for _, cli := range mb.clientByID {
 		cli.WriteActionQueue() <- responsePayload
 	}
 }
@@ -117,12 +117,12 @@ func (mb *MessageBroker) handleCreateRoom(p ActionPayload) {
 
 	responsePayload := ActionResponsePayload{
 		actionType: "new_user",
-		roomID: p.roomID,
-		roomName: p.newRoomName,
+		roomID:     p.roomID,
+		roomName:   p.newRoomName,
 	}
 
 	// broadcast new user message to all users logged on
-	for _,cli:= range mb.clientByID {
+	for _, cli := range mb.clientByID {
 		cli.WriteActionQueue() <- responsePayload
 	}
 }

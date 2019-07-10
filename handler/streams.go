@@ -1,66 +1,87 @@
 package handler
 
 import (
+	"encoding/json"
+	"fmt"
+	"github.com/calvinfeng/sling/util"
+	"github.com/gorilla/websocket"
+	"github.com/labstack/echo/v4"
+	"net/http"
 	"sync"
 )
 
 // GetActionStreamHandler handles stream messages - to be called after initializing your broker
 func GetActionStreamHandler(upgrader *websocket.Upgrader) echo.HandlerFunc { // handle message streams?
 	if broker == nil {
-		return nil, errors.New("please run you broker with RunBroker")
+		util.LogErr("please run you broker with RunBroker", nil)
+		return nil
 	}
 
-	return func(ctx echo.Context) {
-		c = Credential{}
-		if err := ctx.Bind(c); err != nil {
+	return func(ctx echo.Context) error {
+		actionConn, err := upgrader.Upgrade(ctx.Response(), ctx.Request(), nil)
+		if err != nil {
+			util.LogErr("failure to upgrade action request", err)
+			return nil
+		}
+
+		_, bytes, err := actionConn.ReadMessage()
+
+		c := &Credential{}
+		errM := json.Unmarshal(bytes, c) // converts json to payload
+		if errM != nil {
+			util.LogErr("Error in reading token", errM)
 			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
 
-		user, err := findUserByCredentials(db, c)
+		user, err := findUserByCredentials(broker.db, c)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusUnauthorized, "wrong username or password")
 		}
-
-		actionConn, err := upgrader.Upgrade(ctx.Response(), ctx.Request(), nil)
-		if err != nil {
-			return
-		}
-
 		// make host channel for other socket to pass connection to
 		broker.websocketsByUserID[user.ID] = make(chan *websocket.Conn)
 		// send actionConn along this channel
-		broker.websocketsByUserID[user.ID] <- actionConn
+		util.LogInfo("going to write to chan")
 
-	}, nil
+		broker.websocketsByUserID[user.ID] <- actionConn
+		util.LogInfo("reached end")
+		return nil
+	}
 
 }
 
 // GetMessageStreamHandler handles stream messages - to be called after initializing your broker
 func GetMessageStreamHandler(upgrader *websocket.Upgrader) echo.HandlerFunc { // handle message streams?
 	if broker == nil {
-		return nil, errors.New("please run you broker with RunBroker")
+		util.LogErr("please run you broker with RunBroker", nil)
+		return nil
 	}
 
-	return func(ctx echo.Context) {
-		c = Credential{}
-		if err := ctx.Bind(c); err != nil {
+	return func(ctx echo.Context) error {
+		messageConn, err := upgrader.Upgrade(ctx.Response(), ctx.Request(), nil)
+		if err != nil {
+			util.LogErr("failure to upgrade action request", err)
+			return nil
+		}
+
+		_, bytes, err := messageConn.ReadMessage()
+
+		c := &Credential{}
+		errM := json.Unmarshal(bytes, c) // converts json to payload
+		if errM != nil {
+			util.LogErr("Error in reading token", errM)
 			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
 
-		user, err := findUserByCredentials(db, c)
+		user, err := findUserByCredentials(broker.db, c)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusUnauthorized, "wrong username or password")
-		}
-
-		messageConn, err := upgrader.Upgrade(ctx.Response(), ctx.Request(), nil)
-		if err != nil {
-			return
 		}
 
 		var actionConn *websocket.Conn = getActionConn(user.ID)
 
 		connectClient(messageConn, actionConn, user.ID)
-	}, nil
+		return nil
+	}
 
 }
 
@@ -76,7 +97,7 @@ func connectClient(messageConn *websocket.Conn, actionConn *websocket.Conn, user
 		broker.removeClient <- cli
 	}()
 
-	util.LogInfo(fmt.Sprintf("client %s has joined the chatroom", cli.ID()))
+	util.LogInfo(fmt.Sprintf("client %s has joined the chatroom", cli.UserID()))
 
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -84,7 +105,7 @@ func connectClient(messageConn *websocket.Conn, actionConn *websocket.Conn, user
 	go cli.ActionListen(wg)
 	wg.Wait()
 
-	util.LogInfo(fmt.Sprintf("client %s has left the chatroom", cli.ID()))
+	util.LogInfo(fmt.Sprintf("client %s has left the chatroom", cli.UserID()))
 }
 
 // getActionConn : waits for action stream connection to be passed along channel

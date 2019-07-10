@@ -23,14 +23,14 @@ import (
 type MessageBroker struct {
 	db                 *gorm.DB
 	ctx                context.Context
-	clientByID         map[string]Client
-	cancelByID         map[string]context.CancelFunc
+	clientByID         map[uint]Client
+	cancelByID         map[uint]context.CancelFunc
 	sendMessage        chan MessagePayload
 	addClient          chan Client
 	removeClient       chan Client
 	sendAction         chan ActionPayload
-	groupByRoomID      map[string]map[string]Client
-	websocketsByUserID map[string]chan *websocket.Conn
+	groupByRoomID      map[uint]map[uint]Client
+	websocketsByUserID map[uint]chan *websocket.Conn
 }
 
 var broker *MessageBroker
@@ -41,14 +41,14 @@ func RunBroker(ctx context.Context, db *gorm.DB) {
 	broker = &MessageBroker{
 		db:                 db,
 		ctx:                ctx,
-		clientByID:         make(map[string]Client),
-		cancelByID:         make(map[string]context.CancelFunc),
+		clientByID:         make(map[uint]Client),
+		cancelByID:         make(map[uint]context.CancelFunc),
 		sendMessage:        make(chan MessagePayload),
 		addClient:          make(chan Client),
 		removeClient:       make(chan Client),
 		sendAction:         make(chan ActionPayload),
-		groupByRoomID:      make(map[string]map[string]Client),
-		websocketsByUserID: make(map[string]chan *websocket.Conn),
+		groupByRoomID:      make(map[uint]map[uint]Client),
+		websocketsByUserID: make(map[uint]chan *websocket.Conn),
 	}
 
 	go broker.loop()
@@ -78,7 +78,7 @@ func (mb *MessageBroker) handleRemoveClient(c Client) {
 	mb.cancelByID[c.UserID()]()
 	delete(mb.cancelByID, c.UserID())
 	delete(mb.clientByID, c.UserID())
-	if c.RoomID() != nil {
+	if c.RoomID() != 0 {
 		delete(mb.groupByRoomID[c.RoomID()], c.UserID())
 	}
 	// TODO: ensure empty maps are deleted for memory saving?
@@ -86,12 +86,12 @@ func (mb *MessageBroker) handleRemoveClient(c Client) {
 
 // handleAddClient : creates client & child contexts, adds to broker structures
 func (mb *MessageBroker) handleAddClient(c Client) {
-	ctx, cancel := context.WithCancel(mb.messageCtx) // TODO : should I keep this as context.WithCancel?
-	mb.clientByID[c.ID()] = c
-	mb.cancelByID[c.ID()] = cancel
+	ctx, cancel := context.WithCancel(mb.ctx) // TODO : should I keep this as context.WithCancel?
+	mb.clientByID[c.UserID()] = c
+	mb.cancelByID[c.UserID()] = cancel
 
 	// if mb.groupByRoomID[c.RoomID()] == nil {
-	// 	mb.groupByRoomID[c.RoomID()] = make(map[string]Client)
+	// 	mb.groupByRoomID[c.RoomID()] = make(map[uint]Client)
 	// }
 	// mb.groupByRoomID[c.RoomID()][c.ID()] = c
 
@@ -111,15 +111,15 @@ func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
 	// whose Ids are not in mb.groupByRoomID[p.roomID], update to unread
 
 	// Let belongToRoom = map of user_ids to booleans that belong to p.roomID DATABASE
-	belongToRoom = make(map[string]bool)
+	belongToRoom := make(map[uint]bool)
 
 	// update p to be a notification type
-	message = MessageResponsePayload{
-		actionType: "new_message",
-		userID:     p.userID,
-		roomID:     p.roomID,
-		time:       p.time,
-		body:       p.body,
+	message := MessageResponsePayload{
+		messageType: "new_message",
+		userID:      p.userID,
+		roomID:      p.roomID,
+		time:        p.time,
+		body:        p.body,
 	}
 
 	// send live messages to clients logged into this room
@@ -128,18 +128,18 @@ func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
 		case cli.WriteMessageQueue() <- message:
 		default:
 		}
-		belongToRoom[cli.userID()] = false
+		belongToRoom[cli.UserID()] = false
 	}
 
 	// update p to be a notification type
-	notification = MessageResponsePayload{
-		actionType: "notification",
-		roomID:     p.roomID,
+	notification := MessageResponsePayload{
+		messageType: "notification",
+		roomID:      p.roomID,
 	}
 
 	// send live notifications to logged in clients who belong to this room
 	for userId, active := range belongToRoom {
-		if cli, ok := clientByID[userId]; ok {
+		if cli, ok := mb.clientByID[userId]; ok && active {
 			select {
 			case cli.WriteMessageQueue() <- notification:
 			default:
@@ -151,16 +151,16 @@ func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
 // handleSendAction : checks action type, spawns appropriate goroutine handler
 // NOTE: all action handler are in actionhandlers.go
 func (mb *MessageBroker) handleSendAction(p ActionPayload) {
-	select {
-	case p.actionType == "change_room":
+	switch p.actionType {
+	case "change_room":
 		go mb.handleChangeRoom(p)
-	case p.actionType == "create_dm":
+	case "create_dm":
 		go mb.handleCreateDm(p)
-	case p.actionType == "join_room":
+	case "join_room":
 		go mb.handleJoinRoom(p)
-	case p.actionType == "create_user":
+	case "create_user":
 		go mb.handleCreateUser(p)
-	case p.actionType == "create_room":
+	case "create_room":
 		go mb.handleCreateRoom(p)
 	}
 }

@@ -16,8 +16,8 @@ import (
 // MessagePayload holds the message content to be communicated from the
 // client frontend, to the server and message broker
 type MessagePayload struct {
-	userID string `json:"userID"`
-	roomID string `json:"roomID"`
+	userID uint   `json:"userID"`
+	roomID uint   `json:"roomID"`
 	time   string `json:"time"`
 	body   string `json:"body"`
 }
@@ -26,10 +26,10 @@ type MessagePayload struct {
 // client frontend, to the server and message broker
 type ActionPayload struct {
 	actionType  string `json:"actionType"`
-	userID      string `json:"userID"`
-	roomID      string `json:"roomID"`
-	newRoomID   string `json:"newRoomID"`
-	dmUserID    string `json:"dmUserID"`
+	userID      uint   `json:"userID"`
+	roomID      uint   `json:"roomID"`
+	newRoomID   uint   `json:"newRoomID"`
+	dmUserID    uint   `json:"dmUserID"`
 	newRoomName string `json:"newRoomName"`
 }
 
@@ -39,8 +39,8 @@ type ActionPayload struct {
 // message broker to users logged on
 type MessageResponsePayload struct {
 	messageType string `json:"messageType"`
-	userID      string `json:"userID"`
-	roomID      string `json:"roomID"`
+	userID      uint   `json:"userID"`
+	roomID      uint   `json:"roomID"`
 	time        string `json:"time"`
 	body        string `json:"body"`
 }
@@ -49,8 +49,8 @@ type MessageResponsePayload struct {
 // message broker to users logged on
 type ActionResponsePayload struct {
 	actionType     string           `json:"actionType"`
-	userID         string           `json:"userID"`
-	roomID         string           `json:"roomID"`
+	userID         uint             `json:"userID"`
+	roomID         uint             `json:"roomID"`
 	userName       string           `json:"userName"`
 	roomName       string           `json:"roomName"`
 	messageHistory []*model.Message `json:"messageHistory"`
