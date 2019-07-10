@@ -1,7 +1,6 @@
 .SBcurUser {
     font-size: 20px;
     height: 30px;
-    text-align: center;
     margin-bottom: 10px;
 }
 
@@ -19,9 +18,19 @@
     padding: 5px;
     margin-top: 2px;
 }
+
+.SBroom {
+    cursor: pointer;
+}
+
+.SBroom:hover {
+    background-color: #bbb
+}
+
 .curroom {
     font-weight: bold;
-    border-radius: 10px
+    border-radius: 10px;
+    background-color: #ddd;
 }
 
 .notification {
@@ -34,7 +43,7 @@
 }
 
 .DWlabel {
-    font-size: 16px;
+    font-size: 40px;
     height: 30px;
     text-align: center;
     padding-top:5px;
@@ -43,4 +52,28 @@
 .DWmessage {
     padding-left:20px;
     padding-bottom: 10px;
+}
+
+.DWusername {
+    font-size: 14px;
+    font-weight: bold;
+    margin-right: 0.25rem;
+}
+
+.DWtime {
+    font-size: 14px;
+    color: #666;
+}
+
+.DWmessagebody {
+    font-size: 16px;
+}
+
+.input-box {
+    width: 80%;
+    height: 100%;
+}
+
+.input-submit {
+    height: 100%;
 }

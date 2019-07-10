@@ -1,33 +1,60 @@
 import * as React from 'react';
+import { connect } from 'react-redux'
+import axios, { AxiosResponse } from 'axios'
+
 import './MessagePage.css';
 import SideBar from './components/SideBar';
 import DisplayWindow from './components/DisplayWindow';
 import InputBox from './components/InputBox';
+import * as actions from './actions'
+import { AppActionTypes } from './actions/types'
 
-export interface MessagePageProps {
-    
+import { AppState } from './store'
+import { User, Room, Message } from './types'
+
+interface MessagePageState {
+    inputEnabled: boolean
 }
- 
-export interface MessagePageState {
-    
+
+const initialState: MessagePageState = {
+    inputEnabled: true
 }
- 
-class MessagePage extends React.Component<MessagePageProps, MessagePageState> {
+
+type OwnProps = {
+    setLoggedOut: Function
+}
+
+const mapStateToProps = (state: AppState, ownProps: OwnProps) => ({ ...state, ...ownProps })
+const mapDispatchToProps = (dispatch: React.Dispatch<AppActionTypes>) => {
+    return {
+        onLogOut: () => {
+            dispatch(actions.logOut())
+        }
+    }
+}
+
+type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>
+
+class MessagePage extends React.Component<Props, MessagePageState> {
     // private msgWebsocket: WebSocket
     // private actWebsocket: WebSocket
+    readonly state: MessagePageState = initialState
 
-    // componentDidMount() {
-    //     this.msgWebsocket = new WebSocket("ws://localhost:8000/streams/messages")
-    //     this.actWebsocket = new WebSocket("ws://localhost:8000/streams/actions")
-    //     this.msgWebsocket.onopen = this.handleMsgWebsocketOpen
-    //     this.msgWebsocket.onclose = this.handleMsgWebsocketClose
-    //     this.msgWebsocket.onmessage = this.handleMsgWebsocketMessage
-    //     this.msgWebsocket.onerror = this.handleMsgWebsocketError
-    //     this.actWebsocket.onopen = this.handleActWebsocketOpen
-    //     this.actWebsocket.onclose = this.handleActWebsocketClose
-    //     this.actWebsocket.onerror = this.handleActWebsocketError
-    //     this.actWebsocket.onmessage = this.handleActWebsocketMessage
-    // }
+    componentDidMount() {
+        // TODO: Fetch initial states
+
+        // // Set up websocket handlers
+        // this.msgWebsocket = new WebSocket("ws://localhost:8000/streams/messages")
+        // this.actWebsocket = new WebSocket("ws://localhost:8000/streams/actions")
+        // this.msgWebsocket.onopen = this.handleMsgWebsocketOpen
+        // this.msgWebsocket.onclose = this.handleMsgWebsocketClose
+        // this.msgWebsocket.onmessage = this.handleMsgWebsocketMessage
+        // this.msgWebsocket.onerror = this.handleMsgWebsocketError
+        // this.actWebsocket.onopen = this.handleActWebsocketOpen
+        // this.actWebsocket.onclose = this.handleActWebsocketClose
+        // this.actWebsocket.onerror = this.handleActWebsocketError
+        // this.actWebsocket.onmessage = this.handleActWebsocketMessage
+    }
 
     // handleMsgWebsocketOpen = (ev: Event) => {
 
@@ -61,24 +88,43 @@ class MessagePage extends React.Component<MessagePageProps, MessagePageState> {
 
     // }
 
-    
-    render() { 
-        return (  
+    sendMessage(body: String) {
+        console.log(`sending ${body}`)
+        // TODO: send message
+        this.setState({ inputEnabled: false })
+
+    }
+
+    render() {
+        console.log(this.props)
+        return (
             <div className="App">
                 <div className="left-div">
-                <SideBar />
+                    <SideBar
+                        curUser={this.props.curUser!}
+                        curRoom={this.props.curRoom}
+                        rooms={this.props.rooms}
+                        users={this.props.users}
+                        logOut={this.props.setLoggedOut}
+                    />
                 </div>
                 <div className="right-div">
-                <div className="messages">
-                    <DisplayWindow />
-                </div>
-                <div className="inputs">
-                    <InputBox />
-                </div>
+                    <div className="messages">
+                        <DisplayWindow
+                            curRoom={this.props.curRoom!}
+                            messages={this.props.messages}
+                        />
+                    </div>
+                    <div className="inputs">
+                        <InputBox
+                            sendMessage={(body: String) => this.sendMessage(body)}
+                            enabled={this.state.inputEnabled}
+                        />
+                    </div>
                 </div>
             </div>
         );
     }
 }
- 
-export default MessagePage;
+
+export default connect(mapStateToProps, mapDispatchToProps)(MessagePage);

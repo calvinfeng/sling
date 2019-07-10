@@ -1,124 +1,95 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { RoomType, UserType } from '../store/sling/index'
+import { Room, User } from '../types'
+import { Button } from '@material-ui/core'
 import './component.css'
 
 export interface SideBarProps {
-    
-}
- 
-export interface SideBarState {
-    curUserName: string,
-    curRoom: RoomType,
-    rooms: RoomType[],
-    users: UserType[],
-    displayMore: boolean,
+    curUser: User
+    curRoom: Room | null
+    users: User[]
+    rooms: Room[]
+    logOut: Function
 }
 
- 
-class  SideBar extends Component<SideBarProps, SideBarState> {
+export interface SideBarState {
+    displayMore: boolean
+}
+
+
+class SideBar extends Component<SideBarProps, SideBarState> {
     constructor(props: SideBarProps) {
         super(props);
         this.state = {
-            curUserName: "a",
-            curRoom: {
-                roomID: 1,
-                roomName: "test",
-                hasJoined: true,
-                hasNotification: true,
-                isDirectMessage: false,
-            },
-            rooms:[
-                {
-                    roomID: 3,
-                    roomName: "Room1",
-                    hasJoined:true,
-                    hasNotification:true,
-                    isDirectMessage:false,
-                },
-                {
-                    roomID: 2,
-                    roomName: "a~b",
-                    hasJoined:true,
-                    hasNotification:false,
-                    isDirectMessage:true,
-                },
-                {
-                    roomID: 1,
-                    roomName: "test",
-                    hasJoined: true,
-                    hasNotification: true,
-                    isDirectMessage: false,
-                }
-            ],
-            users:[
-                {
-                    userID: 1,
-                    userName: "Calvin"
-                },
-            ],
             displayMore: false,
         };
     }
 
     handleDisplayMoreUser = () => {
-        this.setState ({
+        this.setState({
             displayMore: !this.state.displayMore,
         })
     }
 
-    hasJoined = (room: RoomType) =>{
+    hasJoined = (room: Room) => {
         return room.hasJoined;
     }
 
-    isDirectMsg = (room: RoomType) => {
-        return room.isDirectMessage;
+    isDirectMsg = (room: Room) => {
+        return room.isDM;
     }
 
-    isNotDirectMsg = (room: RoomType) => {
-        return !room.isDirectMessage;
+    isNotDirectMsg = (room: Room) => {
+        return !room.isDM;
     }
 
-    findDirectMsgName =(roomName: string) => {
-        const names:string[] = roomName.split("~")
-        if (names[0] !== this.state.curUserName) return names[0];
+    findDirectMsgName = (name: string) => {
+        const names: string[] = name.split("~")
+        if (names[0] !== this.props.curUser.username) return names[0];
         return names[1];
     }
 
-    getClassName = ( room: RoomType ) => {
-        if (room.roomID === this.state.curRoom.roomID) return "curroom";
+    getClassName = (room: Room) => {
+        if (this.props.curRoom && room.id === this.props.curRoom!.id) return "curroom";
         if (room.hasNotification) return "notification";
         return "normal";
     }
 
-    render() { 
-        const { hasJoined, isDirectMsg, findDirectMsgName, getClassName, isNotDirectMsg} = this;
+    render() {
+        const { hasJoined, isDirectMsg, findDirectMsgName, getClassName, isNotDirectMsg } = this;
 
-        const listItems = this.state.rooms.filter(hasJoined).filter(isNotDirectMsg).map ((room) =>       
-            <li className={getClassName(room)} key={room.roomID}>{room.roomName}</li>        
+        const listItems = this.props.rooms.filter(hasJoined).filter(isNotDirectMsg).map((room) =>
+            <li className={`SBroom ${getClassName(room)}`} key={room.id}>{room.name}</li>
         );
 
-        const userItems = this.state.rooms.filter(isDirectMsg).map ((room) =>
-            <li className={getClassName(room)} key={room.roomID}>{findDirectMsgName(room.roomName)}</li>
+        const userItems = this.props.rooms.filter(isDirectMsg).map((room) =>
+            <li className={`SBroom ${getClassName(room)}`} key={room.id}>{findDirectMsgName(room.name)}</li>
         );
 
-        let moreUser = (<label onClick={this.handleDisplayMoreUser } className="SBlabel">+ More People</label>);
+        let moreUser = (<label onClick={this.handleDisplayMoreUser} className="SBlabel">+ More People</label>);
         if (this.state.displayMore) {
             moreUser = (
                 <div>
-                    <label onClick={this.handleDisplayMoreUser } className="SBlabel">+ More People</label>
+                    <label onClick={this.handleDisplayMoreUser} className="SBlabel">+ More People</label>
                     <ul className="SBlist">
-                        {this.state.users.map ((user) =>
-                            <li key={user.userID}> {user.userName} </li>
+                        {this.props.users.map((user) =>
+                            <li key={user.id}> {user.username} </li>
                         )}
                     </ul>
-                </div>    
+                </div>
             );
         }
         return (
             <div>
                 <div className="SBcurUser">
-                    <label>{this.state.curUserName}'s sling</label>  
+                    <label>{this.props.curUser!.username}'s sling</label>
+                    <Button
+                        onClick={() => this.props.logOut()}
+                        className="SBlogout"
+                        color="secondary"
+                    >
+                        Log out
+                    </Button>
                 </div>
                 <div >
                     <div className="SBRooms">
@@ -135,5 +106,5 @@ class  SideBar extends Component<SideBarProps, SideBarState> {
         );
     }
 }
- 
+
 export default SideBar;
