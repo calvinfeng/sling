@@ -2,8 +2,10 @@ import * as React from 'react';
 import './component.css';
 import {
     TextField,
-    Button
+    IconButton,
+    InputAdornment
 } from '@material-ui/core'
+import Send from '@material-ui/icons/Send'
 
 export interface InputBoxProps {
     sendMessage: Function
@@ -43,19 +45,24 @@ class InputBox extends React.Component<InputBoxProps, InputBoxState> {
                         value={this.state.input}
                         onChange={e => this.handleInputChange(e.currentTarget.value)}
                         margin="dense"
+                        fullWidth
                         variant="filled"
                         disabled={!this.props.enabled}
+                        InputProps={{
+                            endAdornment: (
+                                <InputAdornment position="end">
+                                    <IconButton
+                                        className="input-submit"
+                                        type="submit"
+                                        value="Submit"
+                                        disabled={!this.props.enabled}
+                                    >
+                                        <Send />
+                                    </IconButton>
+                                </InputAdornment>
+                            )
+                        }}
                     />
-                    <Button
-                        className="input-submit"
-                        color="primary"
-                        variant="contained"
-                        type="submit"
-                        value="Submit"
-                        disabled={!this.props.enabled}
-                    >
-                        Submit
-                    </Button>
                 </form>
             </div>
         );
