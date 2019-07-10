@@ -2,7 +2,6 @@ import {
     LOG_OUT,
     NEW_USER,
     LOAD_USERS,
-    CHANGE_ROOM,
     AppActionTypes
 } from '../actions/types'
 
@@ -16,8 +15,6 @@ export default function users(state: User[] = [], action: AppActionTypes): User[
             return state.concat(action.user)
         case LOAD_USERS:
             return action.users
-        case CHANGE_ROOM:
-            return []
         default:
             return state
     }

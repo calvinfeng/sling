@@ -13,10 +13,12 @@ export interface SideBarProps {
     logOut: Function
     changeRoom: Function
     startDM: Function
+    joinRoom: Function
 }
 
 export interface SideBarState {
-    displayMore: boolean
+    displayMoreChannel: boolean
+    displayMoreUser: boolean
 }
 
 
@@ -24,7 +26,8 @@ class SideBar extends Component<SideBarProps, SideBarState> {
     constructor(props: SideBarProps) {
         super(props);
         this.state = {
-            displayMore: false,
+            displayMoreChannel: false,
+            displayMoreUser: false
         };
     }
 
@@ -33,22 +36,16 @@ class SideBar extends Component<SideBarProps, SideBarState> {
         return true
     }
 
-    handleDisplayMoreUser = () => {
+    handleDisplayMoreChannel = () => {
         this.setState({
-            displayMore: !this.state.displayMore,
+            displayMoreChannel: !this.state.displayMoreChannel,
         })
     }
 
-    hasJoined = (room: Room) => {
-        return room.hasJoined;
-    }
-
-    isDirectMsg = (room: Room) => {
-        return room.isDM;
-    }
-
-    isNotDirectMsg = (room: Room) => {
-        return !room.isDM;
+    handleDisplayMoreUser = () => {
+        this.setState({
+            displayMoreUser: !this.state.displayMoreUser,
+        })
     }
 
     findDirectMsgName = (name: string) => {
@@ -75,38 +72,37 @@ class SideBar extends Component<SideBarProps, SideBarState> {
         )
     }
 
-    render() {
-        const { hasJoined, isDirectMsg, findDirectMsgName, getClassName, isNotDirectMsg } = this;
-
-        const listItems = this.props.rooms.filter(hasJoined).filter(isNotDirectMsg).map((room) =>
+    renderChannels = (hasJoined: boolean, isDM: boolean) => {
+        return this.props.rooms.filter((room): boolean =>
+            room.hasJoined === hasJoined &&
+            room.isDM === isDM
+        ).map((room) =>
             <li
-                className={`SBhoverable ${getClassName(room)}`}
+                className={`SBhoverable ${this.getClassName(room)}`}
                 key={room.id}
-                onClick={(e) => this.props.changeRoom(room)}
+                onClick={hasJoined ?
+                    (e) => this.props.changeRoom(room) :
+                    (e) => this.props.joinRoom(room)
+                }
             >
                 {room.name}
             </li>
         );
+    }
 
-        const userItems = this.props.rooms.filter(isDirectMsg).map((room) =>
-            <li
-                className={`SBhoverable ${getClassName(room)}`}
-                key={room.id}
-                onClick={(e) => this.props.changeRoom(room)}
-            >
-                {findDirectMsgName(room.name)}
-            </li>
-        );
+    render() {
+        let listItems = this.renderChannels(true, false)
+        let userItems = this.renderChannels(true, true)
+        let unjoinedChannels = this.renderChannels(false, false)
+        let noDMUsers = this.renderUserList()
 
-        let moreUser = (<label onClick={this.handleDisplayMoreUser} className="SBlabel SBhoverable">+ More People</label>);
-        if (this.state.displayMore) {
-            moreUser = (
-                <div>
-                    <label onClick={this.handleDisplayMoreUser} className="SBlabel SBhoverable">- More People</label>
-                    <ul className="SBlist">{this.renderUserList()}</ul>
-                </div>
-            );
-        }
+        let moreChannel = <label onClick={this.handleDisplayMoreChannel} className="SBmore SBhoverable">
+            {this.state.displayMoreChannel ? '-' : '+'} More Channels
+        </label>
+        let moreUser = <label onClick={this.handleDisplayMoreUser} className="SBmore SBhoverable">
+            {this.state.displayMoreUser ? '-' : '+'} More People
+        </label>
+
         return (
             <div>
                 <div className="SBcurUser">
@@ -122,12 +118,33 @@ class SideBar extends Component<SideBarProps, SideBarState> {
                 <div >
                     <div className="SBRooms">
                         <label className="SBlabel">Channels</label>
-                        <ul className="SBlist">{listItems}</ul>
+                        {listItems.length > 0 ?
+                            <ul className="SBlist">{listItems}</ul> :
+                            <div className="SBnone">None</div>
+                        }
+
+                        <div className="SBMoreUser">
+                            {moreChannel}
+                            {this.state.displayMoreChannel && (
+                                unjoinedChannels.length > 0 ?
+                                    <ul className="SBlist">{unjoinedChannels}</ul> :
+                                    <div className="SBnone">None</div>
+                            )}
+                        </div>
+
                         <label className="SBlabel">Direct Messages</label>
-                        <ul className="SBlist">{userItems}</ul>
+                        {userItems.length > 0 ?
+                            <ul className="SBlist">{userItems}</ul> :
+                            <div className="SBnone">None</div>
+                        }
                     </div>
                     <div className="SBMoreUser">
                         {moreUser}
+                        {this.state.displayMoreUser && (
+                            noDMUsers.length > 0 ?
+                                <ul className="SBlist">{noDMUsers}</ul> :
+                                <div className="SBnone">None</div>
+                        )}
                     </div>
                 </div>
             </div>

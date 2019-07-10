@@ -6,12 +6,26 @@
 
 .SBlabel {
     font-size: 16px;
-    padding:20px 10px;
+    margin: 20px 10px;
+}
+
+.SBmore {
+    font-size: 15px;
+    margin: 0 1rem;
+    color: #333;
+}
+
+.SBnone {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 1rem;
+    margin-left: 1rem;
 }
 
 .SBlist  {
     list-style-type: none;
     padding-left: 0;
+    margin-bottom: 0.4rem;
 }
 
 .SBlist > li {
@@ -27,6 +41,10 @@
 
 .SBhoverable:hover {
     background-color: #bbb
+}
+
+.SBMoreUser {
+    margin-bottom: 1rem;
 }
 
 .curroom {

@@ -91,8 +91,15 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                 'Token': localStorage.getItem('jwt_token')
             }
         }).then((res: AxiosResponse) => {
-            // TODO: transform json response into Room type 
-            this.props.onLoadRooms(res.data)
+            this.props.onLoadRooms(res.data.map((room: any): Room => ({
+               id: room.id,
+               name: room.name,
+
+               // TODO: determine whether the user has joined and has notif
+               hasJoined: false,
+               hasNotification: false,
+               isDM: false
+            })))
         })
 
         Promise.all([usersPromise, roomsPromise]).catch((err) => {
@@ -173,7 +180,6 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     }
 
     render() {
-        console.log(this.props)
         return (
             <div className="App">
                 <div className="left-div">
@@ -185,6 +191,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
 
                         logOut={this.props.setLoggedOut}
                         changeRoom={(room: Room) => this.changeRoom(room)}
+                        joinRoom={(room: Room) => this.props.onJoinRoom(room)}
                         startDM={(user: User) => this.startDM(user)}
                     />
                 </div>
