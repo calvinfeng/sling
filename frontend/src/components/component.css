@@ -11,10 +11,12 @@
 
 .SBlist  {
     list-style-type: none;
+    padding-left: 0;
 }
+
 .SBlist > li {
     height: 20px;
-    width: 80px;
+    width: 80%;
     padding: 5px;
     margin-top: 2px;
 }
