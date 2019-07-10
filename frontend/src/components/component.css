@@ -36,7 +36,7 @@
 }
 
 .notification {
-    border: 1px solid red;
+    box-shadow:inset 0px 0px 0px 1px red;
     border-radius: 10px
 }
 
