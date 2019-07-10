@@ -1,10 +1,16 @@
-import React, { Component, FormEvent } from 'react';
+import React, { Component, FormEvent, Dispatch } from 'react';
+import { connect } from 'react-redux'
 import axios, { AxiosResponse } from 'axios'
 import {
     Container,
     TextField,
     Button
 } from '@material-ui/core'
+import { User } from '../types'
+
+import { AppState } from '../store'
+import { logIn } from '../actions'
+import { AppActionTypes } from '../actions/types'
 
 const initialState = {
     login: true,
@@ -23,7 +29,16 @@ type LoginState = {
     loading: boolean
 }
 
-export default class Login extends Component<{}, LoginState> {
+const mapDispatchToProps = (dispatch: Dispatch<AppActionTypes>) => {
+    return {
+        onLogIn: (user: User) => {
+            dispatch(logIn(user))
+        }
+    }
+}
+type Props = ReturnType<typeof mapDispatchToProps>
+
+class Login extends Component<Props, LoginState> {
     readonly state: LoginState = initialState
 
     handleChange(value: string, field: string) {
@@ -75,8 +90,7 @@ export default class Login extends Component<{}, LoginState> {
             name: this.state.username,
             password: this.state.password
         }).then((res: AxiosResponse) => {
-            localStorage.setItem('jwt_token', res.data.jwt_token)
-            alert("logged in successfully") // TODO: transition to message screen
+            this.handleLogIn(res.data)
         }).catch((err) => {
             console.log(err)
             this.setState({ error: 'Invalid username or password.', password: '' })
@@ -91,14 +105,23 @@ export default class Login extends Component<{}, LoginState> {
             email: this.state.email,
             password: this.state.password
         }).then((res: AxiosResponse) => {
-            localStorage.setItem('jwt_token', res.data.jwt_token)
-            alert("registered successfully") // TODO: transition to message screen
+            this.handleLogIn(res.data)
         }).catch((err) => {
             console.log(err)
             this.setState({ error: 'Invalid credentials.' })
         }).finally(() => {
             this.setState({ loading: false })
         })
+    }
+
+    handleLogIn(data: AxiosResponse['data']) {
+        localStorage.setItem('jwt_token', data.jwt_token)
+        let user: User = {
+            username: data.name,
+            jwtToken: data.jwt_token
+        }
+        this.props.onLogIn(user)
+        // TODO: transition to message screen
     }
 
     render() {
@@ -172,3 +195,6 @@ export default class Login extends Component<{}, LoginState> {
         )
     }
 }
+
+
+export default connect(null, mapDispatchToProps)(Login)

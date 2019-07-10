@@ -15,7 +15,6 @@ const App: React.FC = () => {
     <Provider store={store}>
       <div className="App">
         <Login />
-        <ReduxTester />
       </div>
     </Provider>
   );
