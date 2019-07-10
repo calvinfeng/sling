@@ -29,6 +29,8 @@ func runServer(cmd *cobra.Command, args []string) error {
 		log.Fatalf("failed to open DB conn: %s", err.Error())
 	}
 
+	setupBroker(conn)
+
 	srv := echo.New()
 
 	srv.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
@@ -53,10 +55,29 @@ func runServer(cmd *cobra.Command, args []string) error {
 
 	srv.GET("/api/rooms", handler.GetRoomsHandler(conn), handler.NewTokenAuthMiddleware(conn))
 
+	messageStreamHandler, err := handler.GetMessageStreamHandler(&websocket.Upgrader{})
+	if err != nil {
+		util.LogErr("Mesage Stream Handler creation error", err)
+		return err
+	}
+	actionStreamHandler, err := handler.GetActionStreamHandler(&websocket.Upgrader{})
+	if err != nil {
+		util.LogErr("Action Stream Handler creation error", err)
+		return err
+	}
+
+	streams := srv.Group("api/stream")
+	streams.GET("/messages", messageStreamHandler)
+	streams.GET("/actions", actionStreamHandler)
+
 	fmt.Println("Listening at localhost:8888...")
 	if err := srv.Start(":8888"); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func setupBroker(conn) {
+	RunBroker(context.Background(), conn)
 }
