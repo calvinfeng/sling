@@ -51,7 +51,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 	users.GET("/", handler.GetUsersHandler(conn))
 	users.GET("/current", handler.GetCurrentUserHandler(conn))
 
-	//srv.GET("/api/rooms", handler.GetRoomsHandler(conn), handler.NewTokenAuthMiddleware(conn))
+	srv.GET("/api/rooms", handler.GetRoomsHandler(conn), handler.NewTokenAuthMiddleware(conn))
 
 	fmt.Println("Listening at localhost:8888...")
 	if err := srv.Start(":8888"); err != nil {
