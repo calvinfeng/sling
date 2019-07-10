@@ -3,7 +3,8 @@ package model
 // Room is a model for rooms.
 type Room struct {
 	ID       uint   `gorm:"column:id"        json:"id"`
-	RoomName string `gorm:"column:room_name"   json:"room_name"`
+	RoomName string `gorm:"column:name"   json:"name"`
+	Type     int    `gorm:"column:room_type"        json:"room_type"`
 }
 
 // TableName tells GORM where to find this record.
