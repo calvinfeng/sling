@@ -63,6 +63,9 @@ const mapDispatchToProps = (dispatch: React.Dispatch<AppActionTypes>) => {
             dispatch(actions.newUser(user))
         },
 
+        onMarkUnread: (roomID: number) => {
+            dispatch(actions.markUnread(roomID))
+        },
         onJoinRoom: (room: Room) => {
             dispatch(actions.joinRoom(room))
         },
@@ -75,10 +78,26 @@ const mapDispatchToProps = (dispatch: React.Dispatch<AppActionTypes>) => {
 type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>
 
 class MessagePage extends React.Component<Props, MessagePageState> {
-    // private msgWebsocket: WebSocket
-    // private actWebsocket: WebSocket
+    private msgWebsocket: WebSocket
+    private actWebsocket: WebSocket
     readonly state: MessagePageState = initialState
     private messagesEnd = React.createRef<HTMLDivElement>()
+
+    constructor(props: Props) {
+        super(props)
+
+        // Set up websocket handlers
+        this.msgWebsocket = new WebSocket("ws://localhost:8000/streams/messages")
+        this.actWebsocket = new WebSocket("ws://localhost:8000/streams/actions")
+        this.msgWebsocket.onopen = this.handleMsgWebsocketOpen
+        this.msgWebsocket.onclose = this.handleMsgWebsocketClose
+        this.msgWebsocket.onmessage = this.handleMsgWebsocketMessage
+        this.msgWebsocket.onerror = this.handleMsgWebsocketError
+        this.actWebsocket.onopen = this.handleActWebsocketOpen
+        this.actWebsocket.onclose = this.handleActWebsocketClose
+        this.actWebsocket.onerror = this.handleActWebsocketError
+        this.actWebsocket.onmessage = this.handleActWebsocketMessage
+    }
 
     componentDidMount() {
         let token = localStorage.getItem('jwt_token')
@@ -135,104 +154,96 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             console.log(this.state)
             this.setState({ loading: false })
         })
-
-        // // Set up websocket handlers
-        // this.msgWebsocket = new WebSocket("ws://localhost:8000/streams/messages")
-        // this.actWebsocket = new WebSocket("ws://localhost:8000/streams/actions")
-        // this.msgWebsocket.onopen = this.handleMsgWebsocketOpen
-        // this.msgWebsocket.onclose = this.handleMsgWebsocketClose
-        // this.msgWebsocket.onmessage = this.handleMsgWebsocketMessage
-        // this.msgWebsocket.onerror = this.handleMsgWebsocketError
-        // this.actWebsocket.onopen = this.handleActWebsocketOpen
-        // this.actWebsocket.onclose = this.handleActWebsocketClose
-        // this.actWebsocket.onerror = this.handleActWebsocketError
-        // this.actWebsocket.onmessage = this.handleActWebsocketMessage
     }
 
-    // handleMsgWebsocketOpen = (ev: Event) => {
-    //     this.setState({connectedToMsgSocket: true,});
-    // }
+    handleMsgWebsocketOpen = (ev: Event) => {
+        this.setState({ connectedToMsgSocket: true, });
+    }
 
-    // handleMsgWebsocketClose = (ev:CloseEvent) => {
-    //     this.setState({connectedToMsgSocket: false,});
-    // }
+    handleMsgWebsocketClose = (ev: CloseEvent) => {
+        this.setState({ connectedToMsgSocket: false, });
+    }
 
-    // handleMsgWebsocketMessage = (mev:MessageEvent) => {
-    //     const msgResponsePayload = JSON.parse(mev.data);
-    //     if (msgResponsePayload.messageType === "new_message") {  
-    //         this.props.onNewMessage({
-    //             username: msgResponsePayload.uerName,
-    //             time: msgResponsePayload.time,
-    //             body: msgResponsePayload.body,
-    //         });
-    //     } else if (msgResponsePayload.messageType === "notification"){
-    //         this.props.onMarkUnread(msgResponsePayload.roomID);
-    //     } else {
-    //         console.log("undefined type")
-    //     }
-    // }
+    handleMsgWebsocketMessage = (mev: MessageEvent) => {
+        const msgResponsePayload = JSON.parse(mev.data);
+        if (msgResponsePayload.messageType === "new_message") {
+            this.props.onNewMessage({
+                msgID: null,
+                userID: null,
+                username: msgResponsePayload.userName,
+                time: msgResponsePayload.time,
+                body: msgResponsePayload.body,
+            });
+        } else if (msgResponsePayload.messageType === "notification") {
+            this.props.onMarkUnread(msgResponsePayload.roomID);
+        } else {
+            console.log("undefined type")
+        }
+    }
 
-    // handleMsgWebsocketError = (ev:Event) => {
-    //     this.setState({ error: "encountered message websocket error" + ev })
-    // }
+    handleMsgWebsocketError = (ev: Event) => {
+        this.setState({ error: "encountered message websocket error" + ev })
+    }
 
-    // handleActWebsocketOpen = (ev: Event) => {
-    //     this.setState({connectedToActSocket: true,});
-    // }
+    handleActWebsocketOpen = (ev: Event) => {
+        this.setState({ connectedToActSocket: true, });
+    }
 
-    // handleActWebsocketClose = (ev:CloseEvent) => {
-    //     this.setState({connectedToActSocket: false,});
-    // }
+    handleActWebsocketClose = (ev: CloseEvent) => {
+        this.setState({ connectedToActSocket: false, });
+    }
 
-    // handleActWebsocketError = (ev:Event) => {
-    //     this.setState({ error: "encountered action websocket error" + ev })
-    // }
+    handleActWebsocketError = (ev: Event) => {
+        this.setState({ error: "encountered action websocket error" + ev })
+    }
 
-    // handleActWebsocketMessage = (mev:MessageEvent) => {
-    //     const actResponsePayload = JSON.parse(mev.data);
-    //     if (actResponsePayload.actionType === "message_history") {
-    //         const msgs = actResponsePayload.messageHistory;
-    //         let messages = [];
-    //         for (let i = 0; i < msgs.length ; i++) {
-    //             messages.push({
-    //                 username: msgs[i].senderName,
-    //                 time: msgs[i].time,
-    //                 body: msgs[i].body,
-    //             })
-    //         }       
-    //         this.props.onLoadMessages(messages);
-    //     } else if (actResponsePayload.actionType === "create_dm") {
-    //         this.props.onNewRoom({
-    //             id: actResponsePayload.roomID,
-    //             name: actResponsePayload.roomName,
-    //             hasJoined: true,
-    //             hasNotification: false,
-    //             isDM: true,
-    //         })
-    //     } else if (actResponsePayload.actionType === "new_user") {
-    //         this.props.onNewUser({
-    //             username: actResponsePayload.userName,
-    //             id: actResponsePayload.userID,
-    //         })
-    //     } else if (actResponsePayload.actionType === "new_room") {
-    //         this.props.onNewRoom({
-    //             id: actResponsePayload.roomID,
-    //             name: actResponsePayload.roomName,
-    //             hasJoined: true,
-    //             hasNotification: false,
-    //             isDM: false,
-    //         })
-    //     } else {
-    //         console.log("undefined type");
-    //     }
+    handleActWebsocketMessage = (mev: MessageEvent) => {
+        const actResponsePayload = JSON.parse(mev.data);
+        if (actResponsePayload.actionType === "message_history") {
+            const msgs = actResponsePayload.messageHistory;
+            let messages = [];
+            for (let i = 0; i < msgs.length; i++) {
+                messages.push({
+                    msgID: null,
+                    userID: null,
+                    username: msgs[i].senderName,
+                    time: msgs[i].time,
+                    body: msgs[i].body,
+                })
+            }
+            this.props.onLoadMessages(messages);
+        } else if (actResponsePayload.actionType === "create_dm") {
+            this.props.onNewRoom({
+                id: actResponsePayload.roomID,
+                name: actResponsePayload.roomName,
+                hasJoined: true,
+                hasNotification: false,
+                isDM: true,
+            })
+        } else if (actResponsePayload.actionType === "new_user") {
+            this.props.onNewUser({
+                username: actResponsePayload.userName,
+                id: actResponsePayload.userID,
+                jwtToken: null
+            })
+        } else if (actResponsePayload.actionType === "new_room") {
+            this.props.onNewRoom({
+                id: actResponsePayload.roomID,
+                name: actResponsePayload.roomName,
+                hasJoined: true,
+                hasNotification: false,
+                isDM: false,
+            })
+        } else {
+            console.log("undefined type");
+        }
 
-    //}
+    }
 
     sendMessage(body: String) {
         console.log(`sending ${body}`)
-        // TODO: send message
+        // TODO: send message to server
         this.setState({ inputEnabled: false })
-
     }
 
     changeRoom(nextRoom: Room) {
@@ -242,13 +253,24 @@ class MessagePage extends React.Component<Props, MessagePageState> {
 
         this.props.onChangeRoom(nextRoom)
 
+        // TODO: send message to server
         // TODO: load next room's messages
+    }
+
+    joinRoom(nextRoom: Room) {
+        if (nextRoom.hasJoined) {
+            return
+        }
+
+        // TODO: send action to server
+
+        this.props.onJoinRoom(nextRoom)
     }
 
     startDM(user: User) {
         console.log(user)
 
-        //TODO: start DM
+        // TODO: send action to server
     }
 
     scrollToBottom = () => {
@@ -267,7 +289,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
 
                         logOut={this.props.setLoggedOut}
                         changeRoom={(room: Room) => this.changeRoom(room)}
-                        joinRoom={(room: Room) => this.props.onJoinRoom(room)}
+                        joinRoom={(room: Room) => this.joinRoom(room)}
                         startDM={(user: User) => this.startDM(user)}
                     />
                 </div>
