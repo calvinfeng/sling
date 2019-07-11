@@ -13,6 +13,8 @@
     font-size: 15px;
     margin: 0 1rem;
     color: #333;
+    padding: 0.25rem;
+    border-radius: 5px;
 }
 
 .SBnone {
@@ -45,6 +47,10 @@
 
 .SBMoreUser {
     margin-bottom: 1rem;
+}
+
+.SBdmuser {
+    border-radius: 10px;
 }
 
 .curroom {

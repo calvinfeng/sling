@@ -63,7 +63,7 @@ class SideBar extends Component<SideBarProps, SideBarState> {
     renderUserList = () => {
         return this.props.users.map((user) =>
             <li
-                className="SBhoverable"
+                className="SBhoverable SBdmuser"
                 key={user.id}
                 onClick={(e) => this.props.startDM(user)}
             >
