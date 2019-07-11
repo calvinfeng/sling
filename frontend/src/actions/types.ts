@@ -61,7 +61,7 @@ interface ChangeRoomAction {
 
 interface MarkUnreadAction {
     type: typeof MARK_UNREAD
-    room: Room
+    roomID: number
 }
 
 interface JoinRoomAction {

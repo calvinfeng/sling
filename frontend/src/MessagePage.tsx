@@ -16,12 +16,16 @@ interface MessagePageState {
     inputEnabled: boolean
     error: string
     loading: boolean
+    connectedToMsgSocket: boolean
+    connectedToActSocket: boolean
 }
 
 const initialState: MessagePageState = {
     inputEnabled: false,
     error: '',
-    loading: true
+    loading: true,
+    connectedToMsgSocket: false,
+    connectedToActSocket: false,
 }
 
 type OwnProps = {
@@ -130,36 +134,83 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     }
 
     // handleMsgWebsocketOpen = (ev: Event) => {
-
+    //     this.setState({connectedToMsgSocket: true,});
     // }
 
     // handleMsgWebsocketClose = (ev:CloseEvent) => {
-
+    //     this.setState({connectedToMsgSocket: false,});
     // }
 
     // handleMsgWebsocketMessage = (mev:MessageEvent) => {
-
+    //     const msgResponsePayload = JSON.parse(mev.data);
+    //     if (msgResponsePayload.messageType === "new_message") {  
+    //         this.props.onNewMessage({
+    //             username: msgResponsePayload.uerName,
+    //             time: msgResponsePayload.time,
+    //             body: msgResponsePayload.body,
+    //         });
+    //     } else if (msgResponsePayload.messageType === "notification"){
+    //         this.props.onMarkUnread(msgResponsePayload.roomID);
+    //     } else {
+    //         console.log("undefined type")
+    //     }
     // }
 
     // handleMsgWebsocketError = (ev:Event) => {
-
+    //     this.setState({ error: "encountered message websocket error" + ev })
     // }
 
     // handleActWebsocketOpen = (ev: Event) => {
-
+    //     this.setState({connectedToActSocket: true,});
     // }
 
     // handleActWebsocketClose = (ev:CloseEvent) => {
-
+    //     this.setState({connectedToActSocket: false,});
     // }
 
     // handleActWebsocketError = (ev:Event) => {
-
+    //     this.setState({ error: "encountered action websocket error" + ev })
     // }
 
     // handleActWebsocketMessage = (mev:MessageEvent) => {
+    //     const actResponsePayload = JSON.parse(mev.data);
+    //     if (actResponsePayload.actionType === "message_history") {
+    //         const msgs = actResponsePayload.messageHistory;
+    //         let messages = [];
+    //         for (let i = 0; i < msgs.length ; i++) {
+    //             messages.push({
+    //                 username: msgs[i].senderName,
+    //                 time: msgs[i].time,
+    //                 body: msgs[i].body,
+    //             })
+    //         }       
+    //         this.props.onLoadMessages(messages);
+    //     } else if (actResponsePayload.actionType === "create_dm") {
+    //         this.props.onNewRoom({
+    //             id: actResponsePayload.roomID,
+    //             name: actResponsePayload.roomName,
+    //             hasJoined: true,
+    //             hasNotification: false,
+    //             isDM: true,
+    //         })
+    //     } else if (actResponsePayload.actionType === "new_user") {
+    //         this.props.onNewUser({
+    //             username: actResponsePayload.userName,
+    //             id: actResponsePayload.userID,
+    //         })
+    //     } else if (actResponsePayload.actionType === "new_room") {
+    //         this.props.onNewRoom({
+    //             id: actResponsePayload.roomID,
+    //             name: actResponsePayload.roomName,
+    //             hasJoined: true,
+    //             hasNotification: false,
+    //             isDM: false,
+    //         })
+    //     } else {
+    //         console.log("undefined type");
+    //     }
 
-    // }
+    //}
 
     sendMessage(body: String) {
         console.log(`sending ${body}`)

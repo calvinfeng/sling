@@ -1,6 +1,5 @@
 /*==============================================================================
 payloads.go - Defines Payload Structures
-
 Summary: Defines payloads for channel communication ingoing and outgoing between
 the MessageBroker and WebsocketClient s
 ==============================================================================*/
@@ -54,4 +53,4 @@ type ActionResponsePayload struct {
 	userName       string           `json:"userName"`
 	roomName       string           `json:"roomName"`
 	messageHistory []*model.Message `json:"messageHistory"`
-}
+

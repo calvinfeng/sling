@@ -14,6 +14,7 @@ import (
 
 func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 	// DATABASE update usersrooms to have no unread notifications on p.roomId, p.userId
+	 model.UpdateNotificationStatus(mb.db, p.newRoomID, p.userID, false)
 
 	// update groupByRoomID
 	cli := mb.clientByID[p.userID]
@@ -37,13 +38,15 @@ func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 }
 
 func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
+
 	// DATABASE update rooms to have new room of type dm with
 	// users p.dmUserID and p.userID
 	// DATABASE update usersrooms to mark new room as unread
 
 	// return the new roomID and roomName
-	var roomID uint = 0
-	roomName := "roomName"
+  roomID, roomName := model.InsertDMRoom(mb.db, p.userID, p.dmUserID)
+	model.InsertUserroom(mb.db, p.userID, roomID, false)
+	model.InsertUserroom(mb.db, p.dmUserID, roomID, true)
 
 	responsePayload := ActionResponsePayload{
 		actionType: "create_dm",
@@ -69,8 +72,10 @@ func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
 }
 
 func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
+
 	// DATABASE update usersrooms to have room p.newRoomID and
 	// p.userID, read
+	 model.InsertUserroom(p.userID, p.roomID, false)
 
 	// DATABASE fetch list of messages in p.newRoomID
 	// let messageHistory = list of messages type *model.Message (from dataModel)
@@ -99,7 +104,8 @@ func (mb *MessageBroker) handleCreateUser(p ActionPayload) {
 	// database is already updated from a user user being created
 	// DATABASE
 	// let userName = fetch the user's name from the database
-	userName := "userName"
+  userName := model.GetUserNameByID(mb.db, p.userID)
+
 
 	responsePayload := ActionResponsePayload{
 		actionType: "new_user",
@@ -114,10 +120,12 @@ func (mb *MessageBroker) handleCreateUser(p ActionPayload) {
 }
 
 func (mb *MessageBroker) handleCreateRoom(p ActionPayload) {
-
+	roomID := model.InsertRoom(mb.db, p.newRoomName, 0)
+	model.InsertUserroom(mb.db, p.userID, roomID, false)
+    
 	responsePayload := ActionResponsePayload{
 		actionType: "new_user",
-		roomID:     p.roomID,
+		roomID:     roomID,
 		roomName:   p.newRoomName,
 	}
 

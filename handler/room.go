@@ -12,8 +12,8 @@ import (
 func GetRoomsHandler(db *gorm.DB) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 		var rooms []*model.Room
-
-		if err := db.Find(&rooms).Error; err != nil {
+		// need to query all rooms, mark registered, joined and has notification
+		if rooms, err := db.Find(&rooms).Error; err != nil {
 			return echo.NewHTTPError(http.StatusNotFound, err)
 		}
 
