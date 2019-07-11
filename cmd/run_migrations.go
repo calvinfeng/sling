@@ -22,9 +22,9 @@ import (
 const (
 	host         = "localhost"
 	port         = "5432"
-	user         = "pli"
+	user         = "jcho"
 	password     = "jcho"
-	database     = "jcho"
+	database     = "sling"
 	ssl          = "sslmode=disable"
 	migrationDir = "file://./migrations/"
 )
