@@ -6,8 +6,6 @@ import './MessagePage.css';
 import SideBar from './components/SideBar';
 import DisplayWindow from './components/DisplayWindow';
 import InputBox from './components/InputBox';
-import * as actions from './actions'
-import { AppActionTypes } from './actions/types'
 
 import { AppState } from './store'
 import { User, Room, Message } from './types'
