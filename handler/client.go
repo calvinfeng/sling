@@ -22,8 +22,8 @@ import (
 type Client interface {
 	RoomID() uint
 	UserID() uint
-	MessageListen(sync.WaitGroup)
-	ActionListen(sync.WaitGroup)
+	MessageListen(*sync.WaitGroup)
+	ActionListen(*sync.WaitGroup)
 	Activate(ctx context.Context)
 	WriteMessageQueue() chan<- MessageResponsePayload
 	WriteActionQueue() chan<- ActionResponsePayload
@@ -76,19 +76,20 @@ func (c *WebSocketClient) SetRoomID(roomID uint) {
 
 // MessageListen : continously checks for new messages along the websocket connection,
 // and forwards new messages along the proper channels
-func (c *WebSocketClient) MessageListen(wg sync.WaitGroup) {
+func (c *WebSocketClient) MessageListen(wg *sync.WaitGroup) {
 	defer wg.Done()
+	defer util.LogInfo(fmt.Sprintf("client %d disconnected from messages websocket", c.UserID()))
+
 	for {
 		_, bytes, err := c.connMessage.ReadMessage()
 
 		if err != nil &&
 			websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
-			util.LogInfo(fmt.Sprintf("Client %s is listening", c.userID))
 			return
 		}
 
 		if err != nil {
-			util.LogErr("handler.go conn.RedJSON", err)
+			util.LogErr("conn.ReadMessage", err)
 			return
 		}
 
@@ -98,19 +99,19 @@ func (c *WebSocketClient) MessageListen(wg sync.WaitGroup) {
 
 // ActionListen : continously checks for new messages along the websocket connection,
 // and forwards new messages along the proper channels
-func (c *WebSocketClient) ActionListen(wg sync.WaitGroup) {
+func (c *WebSocketClient) ActionListen(wg *sync.WaitGroup) {
 	defer wg.Done()
+	defer util.LogInfo(fmt.Sprintf("client %d disconnected from actions websocket", c.UserID()))
 	for {
 		_, bytes, err := c.connAction.ReadMessage()
 
 		if err != nil &&
 			websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
-			util.LogInfo(fmt.Sprintf("Client %s is listening", c.UserID))
 			return
 		}
 
 		if err != nil {
-			util.LogErr("handler.go conn.RedJSON", err)
+			util.LogErr("conn.ReadMessage", err)
 			return
 		}
 
@@ -158,7 +159,7 @@ func (c *WebSocketClient) readMessageLoop(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done(): // read loop is closed
-			util.LogInfo(fmt.Sprintf("client %s has terminated read message loop", c.UserID))
+			util.LogInfo(fmt.Sprintf("client %d has terminated read message loop", c.UserID))
 			return
 
 		case bytes := <-c.readMessage: // read bytes detected in channel
@@ -188,7 +189,7 @@ func (c *WebSocketClient) readActionLoop(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done(): // read loop is closed
-			util.LogInfo(fmt.Sprintf("client %s has terminated read action loop", c.UserID))
+			util.LogInfo(fmt.Sprintf("client %d has terminated read action loop", c.UserID))
 			return
 
 		case bytes := <-c.readAction: // read bytes detected in channel
@@ -215,7 +216,7 @@ func (c *WebSocketClient) writeMessageLoop(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done(): // write loop is closed
-			util.LogInfo(fmt.Sprintf("client %s has terminated write loop", c.UserID))
+			util.LogInfo(fmt.Sprintf("client %d has terminated write loop", c.UserID))
 			return
 		case p := <-c.writeMessage: // message broker wants to write to client
 			c.connMessage.SetReadDeadline(time.Now().Add(2 * time.Second))
@@ -249,7 +250,7 @@ func (c *WebSocketClient) writeActionLoop(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done(): // write loop is closed
-			util.LogInfo(fmt.Sprintf("client %s has terminated write loop", c.UserID))
+			util.LogInfo(fmt.Sprintf("client %d has terminated write loop", c.UserID))
 			return
 		case p := <-c.writeAction: // message broker wants to write to client
 			c.connAction.SetReadDeadline(time.Now().Add(2 * time.Second))

@@ -21,6 +21,11 @@ type (
 		Password string `json:"password"`
 	}
 
+	// TokenCredential is a payload that captures user submitted token
+	TokenCredential struct {
+		Username string `json:"jwtToken"`
+	}
+
 	// TokenResponse is a payload that returns JWT token back to client.
 	TokenResponse struct {
 		Name     string `json:"name"`
