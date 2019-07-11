@@ -11,7 +11,6 @@ import { AppActionTypes } from './actions/types'
 
 import { AppState } from './store'
 import { User, Room, Message } from './types'
-import Axios from 'axios';
 
 interface MessagePageState {
     inputEnabled: boolean
@@ -110,7 +109,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             if (err.response.status === 401) {
                 this.props.setLoggedOut()
             }
-            
+
             this.setState({ error: 'Failed to fetch.' })
         }).finally(() => {
             console.log(this.state)
