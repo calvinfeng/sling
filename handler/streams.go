@@ -27,6 +27,7 @@ func GetActionStreamHandler(upgrader *websocket.Upgrader) echo.HandlerFunc {
 	}
 
 	return func(ctx echo.Context) error {
+		util.LogInfo("initiate action connection")
 		actionConn, err := upgrader.Upgrade(ctx.Response(), ctx.Request(), nil)
 		if err != nil {
 			util.LogErr("failure to upgrade action request - closing connection", err)
@@ -35,6 +36,7 @@ func GetActionStreamHandler(upgrader *websocket.Upgrader) echo.HandlerFunc {
 		}
 
 		_, bytes, err := actionConn.ReadMessage()
+		util.LogInfo("read action connection")
 
 		c := &TokenCredential{}
 		errM := json.Unmarshal(bytes, c) // converts json to payload
@@ -71,6 +73,8 @@ func GetMessageStreamHandler(upgrader *websocket.Upgrader) echo.HandlerFunc { //
 	}
 
 	return func(ctx echo.Context) error {
+		util.LogInfo("initiate message connection")
+
 		messageConn, err := upgrader.Upgrade(ctx.Response(), ctx.Request(), nil)
 		if err != nil {
 			util.LogErr("failure to upgrade action request - closing connection", err)
@@ -79,10 +83,12 @@ func GetMessageStreamHandler(upgrader *websocket.Upgrader) echo.HandlerFunc { //
 		}
 
 		_, bytes, err := messageConn.ReadMessage()
+		util.LogInfo("read message connection")
 
 		c := &TokenCredential{}
 
 		errM := json.Unmarshal(bytes, c) // converts json to payload
+		util.LogInfo("umarsh message connection")
 
 		if errM != nil {
 			util.LogErr("Error in reading token - closing connection", errM)
