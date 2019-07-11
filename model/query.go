@@ -38,26 +38,29 @@ func GetUsersInARoom(db *gorm.DB, roomID uint) ([]*User, error) {
 }
 
 //GetRooms: get all rooms, populating whether given user has joined and notification status.
-func GetRooms(db *gorm.DB, userID uint) ([]*Room, error) {
-	sqlStatement := `
-	SELECT rooms.id, rooms.name, usersrooms.user_id IS NULL as inroom, 
-	COALESCE(usersrooms.unread, false), rooms.room_type
-	FROM rooms LEFT JOIN usersrooms
-	ON rooms.id = usersrooms.room_id
-	WHERE usersrooms.user_id=? OR usersrooms.user_id IS NULL;`
+func GetRooms(db *gorm.DB, userID uint) ([]*RoomDetail, error) {
+	rooms := []*RoomDetail{}
+	subquery := db.Select("usersrooms.*").Table("usersrooms").Where("user_id = ?", userID).SubQuery()
+	rows, err := db.Debug().Select(`rooms.id, rooms.name, rooms.room_type,
+		ur.user_id IS NOT NULL as inroom, COALESCE(ur.unread, false) as unread`).
+		Table("rooms").
+		Joins("LEFT JOIN ? as ur ON rooms.id = ur.room_id", subquery).
+		Rows()
 
-	rows, err := db.Exec(sqlStatement).Rows()
-	if err != nil {
-		return []*Room{}, err
+	if gorm.IsRecordNotFoundError(err) {
+		return rooms, nil
 	}
+
+	if err != nil {
+		return rooms, err
+	}
+
 	defer rows.Close()
-	var rooms []*Room
 	for rows.Next() {
-		var room *Room
-		err = rows.Scan(&room.ID, &room.RoomName, &room)
+		room := &RoomDetail{}
+		err = db.ScanRows(rows, room)
 		if err != nil {
-			// handle this error
-			return []*Room{}, err
+			return []*RoomDetail{}, err
 		}
 		rooms = append(rooms, room)
 	}
