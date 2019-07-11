@@ -42,11 +42,9 @@ const mapDispatchToProps = (dispatch: React.Dispatch<AppActionTypes>) => {
         onLoadMessages: (messages: Message[]) => {
             dispatch(actions.loadMessages(messages))
         },
-
         onLoadRooms: (rooms: Room[]) => {
             dispatch(actions.loadRooms(rooms))
         },
-
         onLoadUsers: (users: User[]) => {
             dispatch(actions.loadUsers(users))
         },
@@ -67,21 +65,17 @@ const mapDispatchToProps = (dispatch: React.Dispatch<AppActionTypes>) => {
         onChangeRoom: (room: Room) => {
             dispatch(actions.changeRoom(room))
         },
-        onMarkUnread: (roomID: number) => {
-            dispatch(actions.markUnread(roomID))
-        }
     }
 }
 
 type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>
 
 class MessagePage extends React.Component<Props, MessagePageState> {
-    // private msgWebsocket!: WebSocket
-    // private actWebsocket!: WebSocket
+    // private msgWebsocket: WebSocket
+    // private actWebsocket: WebSocket
     readonly state: MessagePageState = initialState
     private messagesEnd = React.createRef<HTMLDivElement>()
 
-    
     componentDidMount() {
         // Fetch users
         let usersPromise = axios.get('api/users/', {
@@ -126,7 +120,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             this.setState({ loading: false })
         })
 
-        // Set up websocket handlers
+        // // Set up websocket handlers
         // this.msgWebsocket = new WebSocket("ws://localhost:8000/streams/messages")
         // this.actWebsocket = new WebSocket("ws://localhost:8000/streams/actions")
         // this.msgWebsocket.onopen = this.handleMsgWebsocketOpen

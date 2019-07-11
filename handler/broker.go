@@ -1,5 +1,6 @@
 /*==============================================================================
 broker.go - Core MessageBroker Functionality
+
 Summary: Creates a MessageBroker, which handles messages along channels from
 Websocket clients to perform broadcasts to other clients or change the database.
 ==============================================================================*/

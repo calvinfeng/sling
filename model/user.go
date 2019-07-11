@@ -1,5 +1,9 @@
 package model
 
+import (
+	"errors"
+)
+
 // User represents a user.
 type User struct {
 	// Both
@@ -15,23 +19,18 @@ type User struct {
 	PasswordDigest []byte `gorm:"column:password_digest" json:"-"`
 }
 
-// TableName tells GORM where to find this record.
-func (User) TableName() string {
-	return "users"
-}
-
 // Validate validates a user model.
 func (u *User) Validate() error {
 	if len(u.Name) == 0 {
-		return &ValidationError{Field: "Name", Message: "Username cannot be empty"}
+		return errors.New("Username cannot be empty")
 	}
 
 	if len(u.Email) == 0 {
-		return &ValidationError{Field: "Email", Message: "Email cannot be empty"}
+		return errors.New("Email cannot be empty")
 	}
 
 	if len(u.Password) < 6 {
-		return &ValidationError{Field: "Password", Message: "Password must be at least 6 characters"}
+		return errors.New("Password must be at least 6 characters")
 	}
 
 	return nil

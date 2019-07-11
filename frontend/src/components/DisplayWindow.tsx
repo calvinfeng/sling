@@ -2,6 +2,7 @@ import * as React from 'react';
 import { Component } from 'react';
 import { Message, Room } from '../types';
 import './component.css';
+
 import moment from 'moment';
 
 export interface DisplayWindowProps {

@@ -1,17 +1,17 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
-	"io"
-	"net/http"
-	"os"
-
 	"github.com/calvinfeng/sling/handler"
+	"github.com/gorilla/websocket"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/spf13/cobra"
-
+	"io"
+	"net/http"
+	"os"
 	// Postgres database driver
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
@@ -29,6 +29,8 @@ func runServer(cmd *cobra.Command, args []string) error {
 		log.Fatalf("failed to open DB conn: %s", err.Error())
 	}
 
+	setupBroker(conn)
+
 	srv := echo.New()
 
 	srv.Use(middleware.LoggerWithConfig(middleware.LoggerConfig{
@@ -41,11 +43,11 @@ func runServer(cmd *cobra.Command, args []string) error {
 		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
 	}))
 
-	srv.File("/", "public/index.html")
-	srv.Static("/assets", "public/assets")
+	// srv.File("/", "public/index.html")
+	// srv.Static("/assets", "public/assets")
 
-	// srv.File("/", "frontend/build/index.html")
-	// srv.Static("/static", "frontend/build/static")
+	srv.File("/", "frontend/build/index.html")
+	srv.Static("/static", "frontend/build/static")
 
 	srv.POST("/api/register", handler.NewUserHandler(conn))
 	srv.POST("/api/login", handler.LoginHandler(conn))
@@ -57,10 +59,29 @@ func runServer(cmd *cobra.Command, args []string) error {
 
 	srv.GET("/api/rooms", handler.GetRoomsHandler(conn), handler.NewTokenAuthMiddleware(conn))
 
+	messageStreamHandler := handler.GetMessageStreamHandler(&websocket.Upgrader{})
+	// if err != nil {
+	// 	util.LogErr("Mesage Stream Handler creation error", err)
+	// 	return err
+	// }
+	actionStreamHandler := handler.GetActionStreamHandler(&websocket.Upgrader{})
+	// if err != nil {
+	// 	util.LogErr("Action Stream Handler creation error", err)
+	// 	return err
+	// }
+
+	streams := srv.Group("api/stream")
+	streams.GET("/messages", messageStreamHandler)
+	streams.GET("/actions", actionStreamHandler)
+
 	fmt.Println("Listening at localhost:8888...")
 	if err := srv.Start(":8888"); err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func setupBroker(conn *gorm.DB) {
+	handler.RunBroker(context.Background(), conn)
 }

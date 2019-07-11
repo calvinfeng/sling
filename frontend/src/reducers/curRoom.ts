@@ -16,6 +16,7 @@ export default function curRoom(state: Room | null = null, action: AppActionType
             return action.room
         case JOIN_ROOM:
             action.room.hasJoined = true
+            action.room.hasNotification = false
             return action.room
         default:
             return state

@@ -28,7 +28,11 @@ func NewTokenAuthMiddleware(db *gorm.DB) echo.MiddlewareFunc {
 				return hmacSecret, nil
 			})
 
-			if _, ok := parsedToken.Claims.(jwt.MapClaims); err != nil || !ok || !parsedToken.Valid {
+			if err != nil {
+				return echo.NewHTTPError(http.StatusUnauthorized, "valid token is not presented in header")
+			}
+
+			if _, ok := parsedToken.Claims.(jwt.MapClaims); !ok || !parsedToken.Valid {
 				return echo.NewHTTPError(http.StatusUnauthorized, "valid token is not presented in header")
 			}
 

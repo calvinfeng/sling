@@ -1,7 +1,7 @@
 .left-div {
     float: left;
-    width: 20%;
-    height: 400px;
+    width: 250px;
+    height: 90vh;
     margin: 30px 30px;
     
     overflow: hidden;
@@ -10,16 +10,19 @@
   .right-div {
     overflow: hidden;
     margin: 30px 30px;
+    width: calc(100vw - 120px - 200px)
   }
   
   .messages {
     border: 2px solid  #ffb0cd;
-    height: 350px;
+    height: calc(90vh - 60px);
+    overflow-y: scroll;
+    overflow-x: hidden;
     margin-bottom: 10px;
   }
   
   .inputs {
     border: 2px solid  #ffb0cd;
     padding: 10px 10px;
-    height: 120px;
+    height: 60px;
   }

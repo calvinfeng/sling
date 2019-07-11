@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/calvinfeng/sling/util"
 	"net/http"
 	"strings"
 
@@ -20,6 +21,11 @@ type (
 		Password string `json:"password"`
 	}
 
+	// TokenCredential is a payload that captures user submitted token
+	TokenCredential struct {
+		jwtToken string `json:"jwtToken"`
+	}
+
 	// TokenResponse is a payload that returns JWT token back to client.
 	TokenResponse struct {
 		Name     string `json:"name"`
@@ -31,6 +37,7 @@ type (
 // NewUserHandler returns a handler that creates a new user.
 func NewUserHandler(db *gorm.DB /*, actions chan ActionPayload*/) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
+
 		user := &model.User{}
 		if err := ctx.Bind(user); err != nil {
 			return echo.NewHTTPError(http.StatusInternalServerError, err)
@@ -95,6 +102,7 @@ func LoginHandler(db *gorm.DB) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
 
+		util.LogInfo(c.Username)
 		user, err := findUserByCredentials(db, c)
 		if err != nil {
 			return echo.NewHTTPError(http.StatusUnauthorized, "wrong username or password")

@@ -53,4 +53,4 @@ type ActionResponsePayload struct {
 	userName       string           `json:"userName"`
 	roomName       string           `json:"roomName"`
 	messageHistory []*model.Message `json:"messageHistory"`
-}
+
