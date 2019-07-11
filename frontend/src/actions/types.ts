@@ -15,56 +15,56 @@ export const MARK_UNREAD = 'MARK_UNREAD'
 export const JOIN_ROOM = 'JOIN_ROOM'
 
 // Define action types
-interface LogInAction {
+type LogInAction = {
     type: typeof LOG_IN
     user: User
 }
 
-interface LogOutAction {
+type LogOutAction = {
     type: typeof LOG_OUT
 }
 
-interface NewRoomAction {
+type NewRoomAction = {
     type: typeof NEW_ROOM
     room: Room
 }
 
-interface NewMessageAction {
+type NewMessageAction = {
     type: typeof NEW_MESSAGE
     message: Message
 }
 
-interface NewUserAction {
+type NewUserAction = {
     type: typeof NEW_USER
     user: User
 }
 
-interface LoadRoomsAction {
+type LoadRoomsAction = {
     type: typeof LOAD_ROOMS
     rooms: Room[]
 }
 
-interface LoadMessagesAction {
+type LoadMessagesAction = {
     type: typeof LOAD_MESSAGES
     messages: Message[]
 }
 
-interface LoadUsersAction {
+type LoadUsersAction = {
     type: typeof LOAD_USERS
     users: User[]
 }
 
-interface ChangeRoomAction {
+type ChangeRoomAction = {
     type: typeof CHANGE_ROOM
     room: Room
 }
 
-interface MarkUnreadAction {
+type MarkUnreadAction = {
     type: typeof MARK_UNREAD
     roomID: number
 }
 
-interface JoinRoomAction {
+type JoinRoomAction = {
     type: typeof JOIN_ROOM
     room: Room
 }

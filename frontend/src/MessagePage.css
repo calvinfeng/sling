@@ -10,7 +10,7 @@
   .right-div {
     overflow: hidden;
     margin: 30px 30px;
-    width: calc(100vw - 120px - 200px)
+    width: calc(100vw - 120px - 250px)
   }
   
   .messages {

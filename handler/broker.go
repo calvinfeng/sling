@@ -10,7 +10,8 @@ package handler
 
 import (
 	"context"
-	_ "github.com/calvinfeng/sling/model"
+
+	// "github.com/calvinfeng/sling/model"
 	"github.com/calvinfeng/sling/util"
 	"github.com/gorilla/websocket"
 	"github.com/jinzhu/gorm"
@@ -115,15 +116,15 @@ func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
 
 	// update p to be a notification type
 	message := MessageResponsePayload{
-		messageType: "new_message",
-		userID:      p.userID,
-		roomID:      p.roomID,
-		time:        p.time,
-		body:        p.body,
+		MessageType: "new_message",
+		UserID:      p.UserID,
+		RoomID:      p.RoomID,
+		Time:        p.Time,
+		Body:        p.Body,
 	}
 
 	// send live messages to clients logged into this room
-	for _, cli := range mb.groupByRoomID[p.roomID] {
+	for _, cli := range mb.groupByRoomID[p.RoomID] {
 		select {
 		case cli.WriteMessageQueue() <- message:
 		default:
@@ -133,13 +134,13 @@ func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
 
 	// update p to be a notification type
 	notification := MessageResponsePayload{
-		messageType: "notification",
-		roomID:      p.roomID,
+		MessageType: "notification",
+		RoomID:      p.RoomID,
 	}
 
 	// send live notifications to logged in clients who belong to this room
-	for userId, active := range belongToRoom {
-		if cli, ok := mb.clientByID[userId]; ok && active {
+	for userID, active := range belongToRoom {
+		if cli, ok := mb.clientByID[userID]; ok && active {
 			select {
 			case cli.WriteMessageQueue() <- notification:
 			default:
@@ -151,7 +152,7 @@ func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
 // handleSendAction : checks action type, spawns appropriate goroutine handler
 // NOTE: all action handler are in actionhandlers.go
 func (mb *MessageBroker) handleSendAction(p ActionPayload) {
-	switch p.actionType {
+	switch p.ActionType {
 	case "change_room":
 		go mb.handleChangeRoom(p)
 	case "create_dm":

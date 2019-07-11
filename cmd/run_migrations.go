@@ -7,15 +7,13 @@ import (
 	"github.com/golang-migrate/migrate"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	
-	_ "github.com/lib/pq" // Driver
+
+	"github.com/calvinfeng/sling/model"
 	_ "github.com/golang-migrate/migrate/database/postgres" // Driver
 	_ "github.com/golang-migrate/migrate/source/file"       // Driver
 	"github.com/jinzhu/gorm"
 	_ "github.com/lib/pq" // Driver
-	"github.com/sirupsen/logrus"
-	"github.com/spf13/cobra"
-	"github.com/calvinfeng/sling/model"
+	_ "github.com/lib/pq" // Driver
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -159,11 +157,11 @@ func runMigrations(cmd *cobra.Command, args []string) error {
 		},
 		&model.Message{
 			CreateTime: time.Now(),
-			Body:       "You clearly don’t know who you’re talking to, 
+			Body: `You clearly don’t know who you’re talking to, 
 			so let me clue you in. I am not in danger, Skyler. I am the danger. 
-			A guy opens his door and gets shot, and you think that of me? No! I am the one who knocks!",
-			SenderID:   2,
-			RoomID:     1,
+			A guy opens his door and gets shot, and you think that of me? No! I am the one who knocks!`,
+			SenderID: 2,
+			RoomID:   1,
 		},
 		&model.Message{
 			CreateTime: time.Now(),

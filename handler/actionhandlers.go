@@ -14,24 +14,24 @@ import (
 
 func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 	// DATABASE update usersrooms to have no unread notifications on p.roomId, p.userId
-	 model.UpdateNotificationStatus(mb.db, p.newRoomID, p.userID, false)
+	model.UpdateNotificationStatus(mb.db, p.NewRoomID, p.UserID, false)
 
 	// update groupByRoomID
-	cli := mb.clientByID[p.userID]
-	cli.SetRoomID(p.newRoomID)
-	if mb.groupByRoomID[p.newRoomID] == nil {
-		mb.groupByRoomID[p.newRoomID] = make(map[uint]Client)
+	cli := mb.clientByID[p.UserID]
+	cli.SetRoomID(p.NewRoomID)
+	if mb.groupByRoomID[p.NewRoomID] == nil {
+		mb.groupByRoomID[p.NewRoomID] = make(map[uint]Client)
 	}
-	delete(mb.groupByRoomID[p.roomID], p.userID)
-	mb.groupByRoomID[p.newRoomID][p.userID] = cli
+	delete(mb.groupByRoomID[p.RoomID], p.UserID)
+	mb.groupByRoomID[p.NewRoomID][p.UserID] = cli
 
-	// DATABASE fetch list of messages in p.newRoomID
+	// DATABASE fetch list of messages in p.NewRoomID
 	// let messageHistory = list of messages type *model.Message (from dataModel)
 	var messageHistory []*model.Message
 
 	responsePayload := ActionResponsePayload{
-		actionType:     "message_history",
-		messageHistory: messageHistory,
+		ActionType:     "message_history",
+		MessageHistory: messageHistory,
 	}
 
 	cli.WriteActionQueue() <- responsePayload
@@ -40,33 +40,37 @@ func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
 
 	// DATABASE update rooms to have new room of type dm with
-	// users p.dmUserID and p.userID
+	// users p.dmUserID and p.UserID
 	// DATABASE update usersrooms to mark new room as unread
 
 	// return the new roomID and roomName
-  roomID, roomName := model.InsertDMRoom(mb.db, p.userID, p.dmUserID)
-	model.InsertUserroom(mb.db, p.userID, roomID, false)
-	model.InsertUserroom(mb.db, p.dmUserID, roomID, true)
-
-	responsePayload := ActionResponsePayload{
-		actionType: "create_dm",
-		roomID:     roomID,
-		roomName:   roomName,
+	roomID, roomName, err := model.InsertDMRoom(mb.db, p.UserID, p.DMUserID)
+	if err != nil {
+		return // TODO: Better error handling
 	}
 
-	// update group by roomID
-	cli := mb.clientByID[p.userID]
+	model.InsertUserroom(mb.db, p.UserID, roomID, false)
+	model.InsertUserroom(mb.db, p.DMUserID, roomID, true)
+
+	responsePayload := ActionResponsePayload{
+		ActionType: "create_dm",
+		RoomID:     roomID,
+		RoomName:   roomName,
+	}
+
+	// update group by RoomID
+	cli := mb.clientByID[p.UserID]
 	if mb.groupByRoomID[roomID] == nil {
 		mb.groupByRoomID[roomID] = make(map[uint]Client)
 	}
 	if mb.groupByRoomID[cli.RoomID()] != nil {
-		delete(mb.groupByRoomID[cli.RoomID()], p.userID)
+		delete(mb.groupByRoomID[cli.RoomID()], p.UserID)
 	}
 	cli.SetRoomID(roomID)
-	mb.groupByRoomID[roomID][p.userID] = cli
+	mb.groupByRoomID[roomID][p.UserID] = cli
 
 	// send new dm notification to users logged on
-	if cli, ok := mb.clientByID[p.dmUserID]; ok {
+	if cli, ok := mb.clientByID[p.DMUserID]; ok {
 		cli.WriteActionQueue() <- responsePayload
 	}
 }
@@ -75,27 +79,27 @@ func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
 
 	// DATABASE update usersrooms to have room p.newRoomID and
 	// p.userID, read
-	 model.InsertUserroom(p.userID, p.roomID, false)
+	model.InsertUserroom(mb.db, p.UserID, p.RoomID, false)
 
-	// DATABASE fetch list of messages in p.newRoomID
-	// let messageHistory = list of messages type *model.Message (from dataModel)
+	// DATABASE fetch list of messages in p.NewRoomID
+	// let MessageHistory = list of messages type *model.Message (from dataModel)
 	var messageHistory []*model.Message
 
 	responsePayload := ActionResponsePayload{
-		actionType:     "message_history",
-		messageHistory: messageHistory,
+		ActionType:     "message_history",
+		MessageHistory: messageHistory,
 	}
 
-	// update group by roomID
-	cli := mb.clientByID[p.userID]
-	if mb.groupByRoomID[p.newRoomID] == nil {
-		mb.groupByRoomID[p.newRoomID] = make(map[uint]Client)
+	// update group by RoomID
+	cli := mb.clientByID[p.UserID]
+	if mb.groupByRoomID[p.NewRoomID] == nil {
+		mb.groupByRoomID[p.NewRoomID] = make(map[uint]Client)
 	}
 	if mb.groupByRoomID[cli.RoomID()] != nil {
-		delete(mb.groupByRoomID[cli.RoomID()], p.userID)
+		delete(mb.groupByRoomID[cli.RoomID()], p.UserID)
 	}
-	cli.SetRoomID(p.newRoomID)
-	mb.groupByRoomID[p.newRoomID][p.userID] = cli
+	cli.SetRoomID(p.NewRoomID)
+	mb.groupByRoomID[p.NewRoomID][p.UserID] = cli
 
 	cli.WriteActionQueue() <- responsePayload
 }
@@ -104,13 +108,12 @@ func (mb *MessageBroker) handleCreateUser(p ActionPayload) {
 	// database is already updated from a user user being created
 	// DATABASE
 	// let userName = fetch the user's name from the database
-  userName := model.GetUserNameByID(mb.db, p.userID)
-
+	userName := model.GetUserNameByID(mb.db, p.UserID)
 
 	responsePayload := ActionResponsePayload{
-		actionType: "new_user",
-		userID:     p.userID,
-		userName:   userName,
+		ActionType: "new_user",
+		UserID:     p.UserID,
+		UserName:   userName,
 	}
 
 	// broadcast new user message to all users logged on
@@ -120,13 +123,16 @@ func (mb *MessageBroker) handleCreateUser(p ActionPayload) {
 }
 
 func (mb *MessageBroker) handleCreateRoom(p ActionPayload) {
-	roomID := model.InsertRoom(mb.db, p.newRoomName, 0)
-	model.InsertUserroom(mb.db, p.userID, roomID, false)
-    
+	roomID, err := model.InsertRoom(mb.db, p.NewRoomName, 0)
+	if err != nil {
+		return // TODO: Better error handling
+	}
+	model.InsertUserroom(mb.db, p.UserID, roomID, false)
+
 	responsePayload := ActionResponsePayload{
-		actionType: "new_user",
-		roomID:     roomID,
-		roomName:   p.newRoomName,
+		ActionType: "new_room",
+		RoomID:     p.RoomID,
+		RoomName:   p.NewRoomName,
 	}
 
 	// broadcast new user message to all users logged on

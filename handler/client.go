@@ -12,9 +12,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+
 	"github.com/calvinfeng/sling/util"
 	"github.com/gorilla/websocket"
-	_ "github.com/labstack/echo/v4"
+
+	// "github.com/labstack/echo/v4"
 	"sync"
 	"time"
 )
@@ -159,7 +161,7 @@ func (c *WebSocketClient) readMessageLoop(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done(): // read loop is closed
-			util.LogInfo(fmt.Sprintf("client %d has terminated read message loop", c.UserID))
+			util.LogInfo(fmt.Sprintf("client %d has terminated read message loop", c.userID))
 			return
 
 		case bytes := <-c.readMessage: // read bytes detected in channel
@@ -189,7 +191,7 @@ func (c *WebSocketClient) readActionLoop(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done(): // read loop is closed
-			util.LogInfo(fmt.Sprintf("client %d has terminated read action loop", c.UserID))
+			util.LogInfo(fmt.Sprintf("client %d has terminated read action loop", c.userID))
 			return
 
 		case bytes := <-c.readAction: // read bytes detected in channel
@@ -216,7 +218,7 @@ func (c *WebSocketClient) writeMessageLoop(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done(): // write loop is closed
-			util.LogInfo(fmt.Sprintf("client %d has terminated write loop", c.UserID))
+			util.LogInfo(fmt.Sprintf("client %d has terminated write loop", c.userID))
 			return
 		case p := <-c.writeMessage: // message broker wants to write to client
 			c.connMessage.SetReadDeadline(time.Now().Add(2 * time.Second))
@@ -250,7 +252,7 @@ func (c *WebSocketClient) writeActionLoop(ctx context.Context) {
 	for {
 		select {
 		case <-ctx.Done(): // write loop is closed
-			util.LogInfo(fmt.Sprintf("client %d has terminated write loop", c.UserID))
+			util.LogInfo(fmt.Sprintf("client %d has terminated write loop", c.userID))
 			return
 		case p := <-c.writeAction: // message broker wants to write to client
 			c.connAction.SetReadDeadline(time.Now().Add(2 * time.Second))
