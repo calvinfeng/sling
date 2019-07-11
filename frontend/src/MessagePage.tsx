@@ -11,6 +11,7 @@ import { AppActionTypes } from './actions/types'
 
 import { AppState } from './store'
 import { User, Room, Message } from './types'
+import curRoom from './reducers/curRoom';
 
 interface MessagePageState {
     inputEnabled: boolean
@@ -19,7 +20,7 @@ interface MessagePageState {
 }
 
 const initialState: MessagePageState = {
-    inputEnabled: false,
+    inputEnabled: false, // don't enable until messages successfully fetched
     error: '',
     loading: true
 }
@@ -31,6 +32,9 @@ type OwnProps = {
 const mapStateToProps = (state: AppState, ownProps: OwnProps) => ({ ...state, ...ownProps })
 const mapDispatchToProps = (dispatch: React.Dispatch<AppActionTypes>) => {
     return {
+        onLogIn: (user: User) => {
+            dispatch(actions.logIn(user))
+        },
         onLogOut: () => {
             dispatch(actions.logOut())
         },
@@ -73,44 +77,57 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     private messagesEnd = React.createRef<HTMLDivElement>()
 
     componentDidMount() {
+        let token = localStorage.getItem('jwt_token')
+        if (!token || token.length === 0) {
+            this.props.setLoggedOut()
+        }
+
+        // Get current user from token
+        let curUserPromise = axios.get('api/users/current', {
+            headers: { 'Token': token }
+        }).then((res: AxiosResponse) => {
+            let user: User = {
+                id: res.data.id,
+                username: res.data.name,
+                jwtToken: res.data.jwt_token
+            }
+            this.props.onLogIn(user)
+        })
+
         // Fetch users
         let usersPromise = axios.get('api/users/', {
             headers: {
-                'Token': localStorage.getItem('jwt_token')
+                'Token': token
             }
         }).then((res: AxiosResponse) => {
             this.props.onLoadUsers(res.data.map((user: any): User => ({
-              username: user.name,
-              id: user.id
+                username: user.name,
+                id: user.id
             })))
         })
 
         // Fetch rooms
         let roomsPromise = axios.get('api/rooms', {
             headers: {
-                'Token': localStorage.getItem('jwt_token')
+                'Token': token
             }
         }).then((res: AxiosResponse) => {
             this.props.onLoadRooms(res.data.map((room: any): Room => ({
-               id: room.id,
-               name: room.name,
+                id: room.id,
+                name: room.name,
 
-               // TODO: determine whether the user has joined and has notif
-               hasJoined: false,
-               hasNotification: false,
-               isDM: false
+                // TODO: determine whether the user has joined and has notif
+                hasJoined: false,
+                hasNotification: false,
+                isDM: false
             })))
         })
 
-        Promise.all([usersPromise, roomsPromise]).catch((err) => {
+        Promise.all([curUserPromise, usersPromise, roomsPromise]).catch((err) => {
             console.log(err)
 
-            // If unauthorized (invalid token), force user back to login page
-            if (err.response.status === 401) {
-                this.props.setLoggedOut()
-            }
-
-            this.setState({ error: 'Failed to fetch.' })
+            // Force user back to login page
+            this.props.setLoggedOut()
         }).finally(() => {
             console.log(this.state)
             this.setState({ loading: false })
@@ -169,7 +186,10 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     }
 
     changeRoom(nextRoom: Room) {
-        this.setState({ inputEnabled: true })
+        if (this.props.curRoom && nextRoom.id === this.props.curRoom.id) {
+            return
+        }
+
         this.props.onChangeRoom(nextRoom)
 
         // TODO: load next room's messages

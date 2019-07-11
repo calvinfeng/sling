@@ -10,7 +10,7 @@ export interface DisplayWindowProps {
 }
 
 export interface DisplayWindowState {
-    
+
 }
 
 class DisplayWindow extends Component<DisplayWindowProps, DisplayWindowState> {
@@ -26,12 +26,16 @@ class DisplayWindow extends Component<DisplayWindowProps, DisplayWindowState> {
         );
         return (
             <div>
-                <div className="DWlabel">
-                    <label>#{this.props.curRoom.name}</label>
-                </div>
-                <div className="DWmessages">
-                    {displayMessages}
-                </div>
+                {this.props.curRoom ?
+                    <div>
+                        <div className="DWlabel">
+                            <label>#{this.props.curRoom.name}</label>
+                        </div>
+                        <div className="DWmessages">
+                            {displayMessages}
+                        </div>
+                    </div> :
+                    "No room selected."}
             </div>
         );
     }

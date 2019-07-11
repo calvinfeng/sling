@@ -106,7 +106,7 @@ class SideBar extends Component<SideBarProps, SideBarState> {
         return (
             <div>
                 <div className="SBcurUser">
-                    <label>{this.props.curUser!.username}'s sling</label>
+                    <label>{this.props.curUser && this.props.curUser!.username}'s sling</label>
                     <Button
                         onClick={() => this.props.logOut()}
                         className="SBlogout"

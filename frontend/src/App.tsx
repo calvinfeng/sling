@@ -43,7 +43,6 @@ class App extends React.Component<{}, AppState> {
             <MessagePage setLoggedOut={() => this.setLoggedIn(false)} /> :
             <Login setLoggedIn={() => this.setLoggedIn(true)} />
           }
-          <ReduxTester />
         </div>
       </Provider>
     );
