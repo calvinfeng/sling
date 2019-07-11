@@ -297,7 +297,12 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                         rooms={this.props.rooms}
                         users={this.props.users}
 
-                        logOut={this.props.setLoggedOut}
+                        logOut={() => {
+                            this.props.setLoggedOut()
+                            this.actWebsocket.close()
+                            this.msgWebsocket.close()
+                            console.log('logging out, closed websockets')
+                        }}
                         changeRoom={(room: Room) => this.changeRoom(room)}
                         joinRoom={(room: Room) => this.joinRoom(room)}
                         startDM={(user: User) => this.startDM(user)}
