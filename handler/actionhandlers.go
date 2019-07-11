@@ -10,9 +10,12 @@ package handler
 
 import (
 	"github.com/calvinfeng/sling/model"
+	"github.com/calvinfeng/sling/util"
 )
 
 func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
+	util.LogInfo("trying to call handleChangeRoom")
+
 	// DATABASE update usersrooms to have no unread notifications on p.roomId, p.userId
 	model.UpdateNotificationStatus(mb.db, p.NewRoomID, p.UserID, false)
 
@@ -38,7 +41,6 @@ func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 }
 
 func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
-
 	// DATABASE update rooms to have new room of type dm with
 	// users p.dmUserID and p.UserID
 	// DATABASE update usersrooms to mark new room as unread

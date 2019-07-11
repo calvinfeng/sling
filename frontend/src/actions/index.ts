@@ -35,6 +35,7 @@ export const newMessage = (message: Message): AppActionTypes => ({
     message
 })
 
+
 export const newUser = (user: User): AppActionTypes => ({
     type: NEW_USER,
     user
