@@ -120,6 +120,7 @@ class Login extends Component<Props, LoginState> {
     handleLogIn(data: AxiosResponse['data']) {
         localStorage.setItem('jwt_token', data.jwt_token)
         let user: User = {
+            id: data.id,
             username: data.name,
             jwtToken: data.jwt_token
         }
