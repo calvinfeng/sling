@@ -4,19 +4,19 @@ import { Message, Room } from '../types';
 import './component.css';
 import moment from 'moment'
 
-export interface DisplayWindowProps {
+type DisplayWindowProps = {
     messages: Message[]
     curRoom: Room
 }
 
-export interface DisplayWindowState {
+type DisplayWindowState = {
 
 }
 
 class DisplayWindow extends Component<DisplayWindowProps, DisplayWindowState> {
     render() {
         const displayMessages = this.props.messages.map((msg) =>
-            <div key={msg.msgID} className="DWmessage">
+            <div key={msg.time.toISOString()} className="DWmessage">
                 <div>
                     <span className="DWusername">{msg.username} </span>
                     <span className="DWtime">{moment(msg.time).fromNow()}</span>

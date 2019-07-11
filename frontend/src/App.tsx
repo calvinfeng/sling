@@ -15,7 +15,7 @@ const initialState = {
   loggedIn: false
 }
 
-interface AppState {
+type AppState = {
   loggedIn: boolean
 }
 

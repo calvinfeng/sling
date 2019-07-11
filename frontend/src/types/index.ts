@@ -1,18 +1,18 @@
-export interface User {
+export type User = {
     username: string
-    id?: number
-    jwtToken?: string
+    id: number | null
+    jwtToken: string | null
 }
 
-export interface Message {
-    msgID?: number
-    userID?: number
+export type Message = {
+    msgID: number | null
+    userID: number | null
     username: string
     time: Date
     body: string
 }
 
-export interface Room {
+export type Room = {
     id: number
     name: string
     hasJoined: boolean

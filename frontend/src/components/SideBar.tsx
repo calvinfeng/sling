@@ -4,7 +4,7 @@ import { Room, User } from '../types'
 import { Button } from '@material-ui/core'
 import './component.css'
 
-export interface SideBarProps {
+type SideBarProps = {
     curUser: User
     curRoom: Room | null
     users: User[]
@@ -16,7 +16,7 @@ export interface SideBarProps {
     joinRoom: Function
 }
 
-export interface SideBarState {
+type SideBarState = {
     displayMoreChannel: boolean
     displayMoreUser: boolean
 }
@@ -64,7 +64,7 @@ class SideBar extends Component<SideBarProps, SideBarState> {
         return this.props.users.map((user) =>
             <li
                 className="SBhoverable SBdmuser"
-                key={user.id}
+                key={user.username}
                 onClick={(e) => this.props.startDM(user)}
             >
                 {user.username}

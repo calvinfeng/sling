@@ -13,7 +13,7 @@ import { AppState } from './store'
 import { User, Room, Message } from './types'
 import curRoom from './reducers/curRoom';
 
-interface MessagePageState {
+type MessagePageState = {
     inputEnabled: boolean
     error: string
     loading: boolean
@@ -102,7 +102,8 @@ class MessagePage extends React.Component<Props, MessagePageState> {
         }).then((res: AxiosResponse) => {
             this.props.onLoadUsers(res.data.map((user: any): User => ({
                 username: user.name,
-                id: user.id
+                id: user.id,
+                jwtToken: null // can't get other peoples' tokens
             })))
         })
 
