@@ -41,7 +41,7 @@ func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
 	// users p.dmUserID and p.UserID
 	// DATABASE update usersrooms to mark new room as unread
 
-	// return the new RoomID and roomName
+	// return the new roomID and roomName
 	var roomID uint
 	roomName := "roomName"
 
@@ -74,11 +74,11 @@ func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
 
 	// DATABASE fetch list of messages in p.NewRoomID
 	// let MessageHistory = list of messages type *model.Message (from dataModel)
-	var MessageHistory []*model.Message
+	var messageHistory []*model.Message
 
 	responsePayload := ActionResponsePayload{
 		ActionType:     "message_history",
-		MessageHistory: MessageHistory,
+		MessageHistory: messageHistory,
 	}
 
 	// update group by RoomID
