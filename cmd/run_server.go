@@ -60,17 +60,10 @@ func runServer(cmd *cobra.Command, args []string) error {
 	srv.GET("/api/rooms", handler.GetRoomsHandler(conn), handler.NewTokenAuthMiddleware(conn))
 
 	messageStreamHandler := handler.GetMessageStreamHandler(&websocket.Upgrader{})
-	// if err != nil {
-	// 	util.LogErr("Mesage Stream Handler creation error", err)
-	// 	return err
-	// }
 	actionStreamHandler := handler.GetActionStreamHandler(&websocket.Upgrader{})
-	// if err != nil {
-	// 	util.LogErr("Action Stream Handler creation error", err)
-	// 	return err
-	// }
 
 	streams := srv.Group("api/stream")
+
 	streams.GET("/messages", messageStreamHandler)
 	streams.GET("/actions", actionStreamHandler)
 
