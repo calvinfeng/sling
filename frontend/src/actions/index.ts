@@ -60,9 +60,9 @@ export const changeRoom = (room: Room): AppActionTypes => ({
     room
 })
 
-export const markUnread = (room: Room): AppActionTypes => ({
+export const markUnread = (roomID: number): AppActionTypes => ({
     type: MARK_UNREAD,
-    room
+    roomID
 })
 
 export const joinRoom = (room: Room): AppActionTypes => ({

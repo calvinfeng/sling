@@ -61,7 +61,7 @@ type ChangeRoomAction = {
 
 type MarkUnreadAction = {
     type: typeof MARK_UNREAD
-    room: Room
+    roomID: number
 }
 
 type JoinRoomAction = {

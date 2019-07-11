@@ -1,1 +1,1 @@
-DROP TABLE IF EXISTS usersRooms;
+DROP TABLE IF EXISTS usersrooms;

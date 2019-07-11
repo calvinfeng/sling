@@ -1,6 +1,5 @@
 /*==============================================================================
 payloads.go - Defines Payload Structures
-
 Summary: Defines payloads for channel communication ingoing and outgoing between
 the MessageBroker and WebsocketClient s
 ==============================================================================*/

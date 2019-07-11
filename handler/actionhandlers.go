@@ -13,7 +13,8 @@ import (
 )
 
 func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
-	// DATABASE update usersrooms to have no unread notifications on p.roomId, p.UserID
+	// DATABASE update usersrooms to have no unread notifications on p.roomId, p.userId
+	model.UpdateNotificationStatus(mb.db, p.NewRoomID, p.UserID, false)
 
 	// update groupByRoomID
 	cli := mb.clientByID[p.UserID]
@@ -37,13 +38,19 @@ func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 }
 
 func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
+
 	// DATABASE update rooms to have new room of type dm with
 	// users p.dmUserID and p.UserID
 	// DATABASE update usersrooms to mark new room as unread
 
 	// return the new roomID and roomName
-	var roomID uint
-	roomName := "roomName"
+	roomID, roomName, err := model.InsertDMRoom(mb.db, p.UserID, p.DMUserID)
+	if err != nil {
+		return // TODO: Better error handling
+	}
+
+	model.InsertUserroom(mb.db, p.UserID, roomID, false)
+	model.InsertUserroom(mb.db, p.DMUserID, roomID, true)
 
 	responsePayload := ActionResponsePayload{
 		ActionType: "create_dm",
@@ -69,8 +76,10 @@ func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
 }
 
 func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
-	// DATABASE update usersrooms to have room p.NewRoomID and
-	// p.UserID, read
+
+	// DATABASE update usersrooms to have room p.newRoomID and
+	// p.userID, read
+	model.InsertUserroom(mb.db, p.UserID, p.RoomID, false)
 
 	// DATABASE fetch list of messages in p.NewRoomID
 	// let MessageHistory = list of messages type *model.Message (from dataModel)
@@ -99,7 +108,7 @@ func (mb *MessageBroker) handleCreateUser(p ActionPayload) {
 	// database is already updated from a user user being created
 	// DATABASE
 	// let userName = fetch the user's name from the database
-	userName := "userName"
+	userName := model.GetUserNameByID(mb.db, p.UserID)
 
 	responsePayload := ActionResponsePayload{
 		ActionType: "new_user",
@@ -114,6 +123,11 @@ func (mb *MessageBroker) handleCreateUser(p ActionPayload) {
 }
 
 func (mb *MessageBroker) handleCreateRoom(p ActionPayload) {
+	roomID, err := model.InsertRoom(mb.db, p.NewRoomName, 0)
+	if err != nil {
+		return // TODO: Better error handling
+	}
+	model.InsertUserroom(mb.db, p.UserID, roomID, false)
 
 	responsePayload := ActionResponsePayload{
 		ActionType: "new_room",
