@@ -11,17 +11,22 @@ import { AppActionTypes } from './actions/types'
 
 import { AppState } from './store'
 import { User, Room, Message } from './types'
+import curRoom from './reducers/curRoom';
 
-interface MessagePageState {
+type MessagePageState = {
     inputEnabled: boolean
     error: string
     loading: boolean
+    connectedToMsgSocket: boolean
+    connectedToActSocket: boolean
 }
 
 const initialState: MessagePageState = {
-    inputEnabled: false,
+    inputEnabled: false, // don't enable until messages successfully fetched
     error: '',
-    loading: true
+    loading: true,
+    connectedToMsgSocket: false,
+    connectedToActSocket: false,
 }
 
 type OwnProps = {
@@ -31,6 +36,9 @@ type OwnProps = {
 const mapStateToProps = (state: AppState, ownProps: OwnProps) => ({ ...state, ...ownProps })
 const mapDispatchToProps = (dispatch: React.Dispatch<AppActionTypes>) => {
     return {
+        onLogIn: (user: User) => {
+            dispatch(actions.logIn(user))
+        },
         onLogOut: () => {
             dispatch(actions.logOut())
         },
@@ -73,44 +81,58 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     private messagesEnd = React.createRef<HTMLDivElement>()
 
     componentDidMount() {
+        let token = localStorage.getItem('jwt_token')
+        if (!token || token.length === 0) {
+            this.props.setLoggedOut()
+        }
+
+        // Get current user from token
+        let curUserPromise = axios.get('api/users/current', {
+            headers: { 'Token': token }
+        }).then((res: AxiosResponse) => {
+            let user: User = {
+                id: res.data.id,
+                username: res.data.name,
+                jwtToken: res.data.jwt_token
+            }
+            this.props.onLogIn(user)
+        })
+
         // Fetch users
         let usersPromise = axios.get('api/users/', {
             headers: {
-                'Token': localStorage.getItem('jwt_token')
+                'Token': token
             }
         }).then((res: AxiosResponse) => {
             this.props.onLoadUsers(res.data.map((user: any): User => ({
-              username: user.name,
-              id: user.id
+                username: user.name,
+                id: user.id,
+                jwtToken: null // can't get other peoples' tokens
             })))
         })
 
         // Fetch rooms
         let roomsPromise = axios.get('api/rooms', {
             headers: {
-                'Token': localStorage.getItem('jwt_token')
+                'Token': token
             }
         }).then((res: AxiosResponse) => {
             this.props.onLoadRooms(res.data.map((room: any): Room => ({
-               id: room.id,
-               name: room.name,
+                id: room.id,
+                name: room.name,
 
-               // TODO: determine whether the user has joined and has notif
-               hasJoined: false,
-               hasNotification: false,
-               isDM: false
+                // TODO: determine whether the user has joined and has notif
+                hasJoined: false,
+                hasNotification: false,
+                isDM: false
             })))
         })
 
-        Promise.all([usersPromise, roomsPromise]).catch((err) => {
+        Promise.all([curUserPromise, usersPromise, roomsPromise]).catch((err) => {
             console.log(err)
 
-            // If unauthorized (invalid token), force user back to login page
-            if (err.response.status === 401) {
-                this.props.setLoggedOut()
-            }
-
-            this.setState({ error: 'Failed to fetch.' })
+            // Force user back to login page
+            this.props.setLoggedOut()
         }).finally(() => {
             console.log(this.state)
             this.setState({ loading: false })
@@ -130,36 +152,83 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     }
 
     // handleMsgWebsocketOpen = (ev: Event) => {
-
+    //     this.setState({connectedToMsgSocket: true,});
     // }
 
     // handleMsgWebsocketClose = (ev:CloseEvent) => {
-
+    //     this.setState({connectedToMsgSocket: false,});
     // }
 
     // handleMsgWebsocketMessage = (mev:MessageEvent) => {
-
+    //     const msgResponsePayload = JSON.parse(mev.data);
+    //     if (msgResponsePayload.messageType === "new_message") {  
+    //         this.props.onNewMessage({
+    //             username: msgResponsePayload.uerName,
+    //             time: msgResponsePayload.time,
+    //             body: msgResponsePayload.body,
+    //         });
+    //     } else if (msgResponsePayload.messageType === "notification"){
+    //         this.props.onMarkUnread(msgResponsePayload.roomID);
+    //     } else {
+    //         console.log("undefined type")
+    //     }
     // }
 
     // handleMsgWebsocketError = (ev:Event) => {
-
+    //     this.setState({ error: "encountered message websocket error" + ev })
     // }
 
     // handleActWebsocketOpen = (ev: Event) => {
-
+    //     this.setState({connectedToActSocket: true,});
     // }
 
     // handleActWebsocketClose = (ev:CloseEvent) => {
-
+    //     this.setState({connectedToActSocket: false,});
     // }
 
     // handleActWebsocketError = (ev:Event) => {
-
+    //     this.setState({ error: "encountered action websocket error" + ev })
     // }
 
     // handleActWebsocketMessage = (mev:MessageEvent) => {
+    //     const actResponsePayload = JSON.parse(mev.data);
+    //     if (actResponsePayload.actionType === "message_history") {
+    //         const msgs = actResponsePayload.messageHistory;
+    //         let messages = [];
+    //         for (let i = 0; i < msgs.length ; i++) {
+    //             messages.push({
+    //                 username: msgs[i].senderName,
+    //                 time: msgs[i].time,
+    //                 body: msgs[i].body,
+    //             })
+    //         }       
+    //         this.props.onLoadMessages(messages);
+    //     } else if (actResponsePayload.actionType === "create_dm") {
+    //         this.props.onNewRoom({
+    //             id: actResponsePayload.roomID,
+    //             name: actResponsePayload.roomName,
+    //             hasJoined: true,
+    //             hasNotification: false,
+    //             isDM: true,
+    //         })
+    //     } else if (actResponsePayload.actionType === "new_user") {
+    //         this.props.onNewUser({
+    //             username: actResponsePayload.userName,
+    //             id: actResponsePayload.userID,
+    //         })
+    //     } else if (actResponsePayload.actionType === "new_room") {
+    //         this.props.onNewRoom({
+    //             id: actResponsePayload.roomID,
+    //             name: actResponsePayload.roomName,
+    //             hasJoined: true,
+    //             hasNotification: false,
+    //             isDM: false,
+    //         })
+    //     } else {
+    //         console.log("undefined type");
+    //     }
 
-    // }
+    //}
 
     sendMessage(body: String) {
         console.log(`sending ${body}`)
@@ -169,7 +238,10 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     }
 
     changeRoom(nextRoom: Room) {
-        this.setState({ inputEnabled: true })
+        if (this.props.curRoom && nextRoom.id === this.props.curRoom.id) {
+            return
+        }
+
         this.props.onChangeRoom(nextRoom)
 
         // TODO: load next room's messages

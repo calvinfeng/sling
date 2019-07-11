@@ -3,8 +3,9 @@ import { Component } from 'react';
 import { Room, User } from '../types'
 import { Button } from '@material-ui/core'
 import './component.css'
+import curUser from '../reducers/curUser';
 
-export interface SideBarProps {
+type SideBarProps = {
     curUser: User
     curRoom: Room | null
     users: User[]
@@ -16,7 +17,7 @@ export interface SideBarProps {
     joinRoom: Function
 }
 
-export interface SideBarState {
+type SideBarState = {
     displayMoreChannel: boolean
     displayMoreUser: boolean
 }
@@ -61,10 +62,18 @@ class SideBar extends Component<SideBarProps, SideBarState> {
     }
 
     renderUserList = () => {
-        return this.props.users.map((user) =>
+        let dms = this.props.rooms
+            .filter(room => room.isDM)
+            .map(room => this.findDirectMsgName(room.name))
+        
+        // Filter out current user and users with active DMs
+        return this.props.users.filter((user) =>
+            user.username !== this.props.curUser.username &&
+            !dms.includes(user.username)
+        ).map((user) =>
             <li
                 className="SBhoverable SBdmuser"
-                key={user.id}
+                key={user.username}
                 onClick={(e) => this.props.startDM(user)}
             >
                 {user.username}
@@ -106,7 +115,7 @@ class SideBar extends Component<SideBarProps, SideBarState> {
         return (
             <div>
                 <div className="SBcurUser">
-                    <label>{this.props.curUser!.username}'s sling</label>
+                    <label>{this.props.curUser && this.props.curUser!.username}'s sling</label>
                     <Button
                         onClick={() => this.props.logOut()}
                         className="SBlogout"

@@ -1,9 +1,11 @@
 package handler
 
 import (
-	"github.com/calvinfeng/sling/util"
+	"fmt"
 	"net/http"
 	"strings"
+
+	"github.com/calvinfeng/sling/util"
 
 	"github.com/dgrijalva/jwt-go"
 
@@ -28,6 +30,7 @@ type (
 
 	// TokenResponse is a payload that returns JWT token back to client.
 	TokenResponse struct {
+		ID       string `json:"id"`
 		Name     string `json:"name"`
 		Email    string `json:"email"`
 		JWTToken string `json:"jwt_token"`
@@ -109,6 +112,7 @@ func LoginHandler(db *gorm.DB) echo.HandlerFunc {
 		}
 
 		return ctx.JSON(http.StatusOK, TokenResponse{
+			ID:       fmt.Sprint(user.ID),
 			Name:     user.Name,
 			Email:    user.Email,
 			JWTToken: user.JWTToken,

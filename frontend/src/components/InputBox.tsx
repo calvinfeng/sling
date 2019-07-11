@@ -7,12 +7,12 @@ import {
 } from '@material-ui/core'
 import Send from '@material-ui/icons/Send'
 
-export interface InputBoxProps {
+type InputBoxProps = {
     sendMessage: Function
     enabled: boolean
 }
 
-export interface InputBoxState {
+type InputBoxState = {
     input: string
 }
 

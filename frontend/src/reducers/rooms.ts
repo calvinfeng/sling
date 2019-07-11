@@ -19,7 +19,7 @@ export default function rooms(state: Room[] = [], action: AppActionTypes): Room[
         case MARK_UNREAD:
             let newState = state.slice()
             newState.forEach((room) => {
-                if (room.id === action.room.id) {
+                if (room.id === action.roomID) {
                     room.hasNotification = true
                 }
             })
