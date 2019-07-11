@@ -11,6 +11,7 @@ import { AppActionTypes } from './actions/types'
 
 import { AppState } from './store'
 import { User, Room, Message } from './types'
+import Axios from 'axios';
 
 interface MessagePageState {
     inputEnabled: boolean
@@ -104,7 +105,13 @@ class MessagePage extends React.Component<Props, MessagePageState> {
 
         Promise.all([usersPromise, roomsPromise]).catch((err) => {
             console.log(err)
-            this.setState({ error: 'Could not fetch rooms.' })
+
+            // If unauthorized (invalid token), force user back to login page
+            if (err.response.status === 401) {
+                this.props.setLoggedOut()
+            }
+            
+            this.setState({ error: 'Failed to fetch.' })
         }).finally(() => {
             console.log(this.state)
             this.setState({ loading: false })
