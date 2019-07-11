@@ -1,17 +1,15 @@
-// /*==============================================================================
-// broker.go - Core MessageBroker Functionality
-
-// Summary: Creates a MessageBroker, which handles messages along channels from
-// Websocket clients to perform broadcasts to other clients or change the database.
-// ==============================================================================*/
-// //NOTE: all database commands are not completed, and are marked with "DATABASE"
+/*==============================================================================
+broker.go - Core MessageBroker Functionality
+Summary: Creates a MessageBroker, which handles messages along channels from
+Websocket clients to perform broadcasts to other clients or change the database.
+==============================================================================*/
+//NOTE: all database commands are not completed, and are marked with "DATABASE"
 
 package handler
 
 import (
 	"context"
-
-	"github.com/calvinfeng/sling/model"
+	_ "github.com/calvinfeng/sling/model"
 	"github.com/calvinfeng/sling/util"
 	"github.com/gorilla/websocket"
 	"github.com/jinzhu/gorm"
@@ -38,7 +36,7 @@ var broker *MessageBroker
 
 // RunBroker : creates a broker and go routine to loop checking for messages
 // from clients
-func RunBroker(messageCtx echo.Context, actionCtx echo.Context, db *gorm.DB) {
+func RunBroker(ctx context.Context, db *gorm.DB) {
 	broker = &MessageBroker{
 		db:                 db,
 		ctx:                ctx,
@@ -76,10 +74,12 @@ func (mb *MessageBroker) loop() {
 
 // handleRemoveClient : removes client from broker structures, and cancels ctx
 func (mb *MessageBroker) handleRemoveClient(c Client) {
-	mb.cancelByID[c.ID()]()
-	delete(mb.cancelByID, c.ID())
-	delete(mb.clientByID, c.ID())
-	delete(mb.groupByRoomID[c.RoomID()], c.ID())
+	mb.cancelByID[c.UserID()]()
+	delete(mb.cancelByID, c.UserID())
+	delete(mb.clientByID, c.UserID())
+	if c.RoomID() != 0 {
+		delete(mb.groupByRoomID[c.RoomID()], c.UserID())
+	}
 	// TODO: ensure empty maps are deleted for memory saving?
 }
 
@@ -110,10 +110,10 @@ func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
 	// whose Ids are not in mb.groupByRoomID[p.roomID], update to unread
 
 	// Let belongToRoom = map of user_ids to booleans that belong to p.roomID DATABASE
-	var belongToRoom = make(map[uint]bool)
+	belongToRoom := make(map[uint]bool)
 
 	// update p to be a notification type
-	var message = MessageResponsePayload{
+	message := MessageResponsePayload{
 		messageType: "new_message",
 		userID:      p.userID,
 		roomID:      p.roomID,
@@ -127,18 +127,18 @@ func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
 		case cli.WriteMessageQueue() <- message:
 		default:
 		}
-		belongToRoom[cli.userID()] = false
+		belongToRoom[cli.UserID()] = false
 	}
 
 	// update p to be a notification type
-	var notification = MessageResponsePayload{
+	notification := MessageResponsePayload{
 		messageType: "notification",
 		roomID:      p.roomID,
 	}
 
 	// send live notifications to logged in clients who belong to this room
 	for userId, active := range belongToRoom {
-		if cli, ok := clientByID[userId]; ok {
+		if cli, ok := mb.clientByID[userId]; ok && active {
 			select {
 			case cli.WriteMessageQueue() <- notification:
 			default:

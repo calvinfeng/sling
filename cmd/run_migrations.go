@@ -15,7 +15,7 @@ import (
 	_ "github.com/lib/pq" // Driver
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/zpl0310/database/model"
+	"github.com/calvinfeng/sling/model"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -23,8 +23,8 @@ const (
 	host         = "localhost"
 	port         = "5432"
 	user         = "pli"
-	password     = "pheebia"
-	database     = "sling"
+	password     = "jcho"
+	database     = "jcho"
 	ssl          = "sslmode=disable"
 	migrationDir = "file://./migrations/"
 )

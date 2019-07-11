@@ -6,7 +6,7 @@ Summary: includes all handlers for actions change_room, send_message, create_dm,
 ==============================================================================*/
 //NOTE: all database commands are not completed, and are marked with "DATABASE"
 
-import "github.com/zpl0310/database/model"
+import "github.com/calvinfeng/sling/model"
 
 package handler
 

@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 	"github.com/golang-migrate/migrate"
-	"github.com/zpl0310/database/model"
+	"github.com/calvinfeng/sling/model"
 	
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
