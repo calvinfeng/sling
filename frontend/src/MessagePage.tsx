@@ -120,8 +120,6 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             this.props.onLoadRooms(res.data.map((room: any): Room => ({
                 id: room.id,
                 name: room.name,
-
-                // TODO: determine whether the user has joined and has notif
                 hasJoined: room.hasJoined,
                 hasNotification: room.hasNotification,
                 isDM: room.type === 1
