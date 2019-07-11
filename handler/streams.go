@@ -36,7 +36,7 @@ func GetActionStreamHandler(upgrader *websocket.Upgrader) echo.HandlerFunc {
 
 		_, bytes, err := actionConn.ReadMessage()
 
-		c := &Credential{}
+		c := &TokenCredential{}
 		errM := json.Unmarshal(bytes, c) // converts json to payload
 		if errM != nil {
 			util.LogErr("Error in reading token - closing connection", errM)
@@ -44,7 +44,7 @@ func GetActionStreamHandler(upgrader *websocket.Upgrader) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
 
-		user, err := findUserByCredentials(broker.db, c)
+		user, err := findUserByToken(broker.db, c.JWTToken)
 		if err != nil {
 			actionConn.Close()
 			return echo.NewHTTPError(http.StatusUnauthorized, "wrong username or password")
@@ -80,15 +80,17 @@ func GetMessageStreamHandler(upgrader *websocket.Upgrader) echo.HandlerFunc { //
 
 		_, bytes, err := messageConn.ReadMessage()
 
-		c := &Credential{}
+		c := &TokenCredential{}
+
 		errM := json.Unmarshal(bytes, c) // converts json to payload
+
 		if errM != nil {
 			util.LogErr("Error in reading token - closing connection", errM)
 			messageConn.Close()
 			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
 
-		user, err := findUserByCredentials(broker.db, c)
+		user, err := findUserByToken(broker.db, c.JWTToken)
 		if err != nil {
 			messageConn.Close()
 			return echo.NewHTTPError(http.StatusUnauthorized, "wrong username or password")
@@ -103,6 +105,8 @@ func GetMessageStreamHandler(upgrader *websocket.Upgrader) echo.HandlerFunc { //
 
 }
 
+// connectClient : creates a webSocketClient and adds both connection to it.
+// Begins listening routines on both connectins, and waits until both are done.
 func connectClient(messageConn *websocket.Conn, actionConn *websocket.Conn, userID uint) {
 	defer messageConn.Close() // defer to execute after return
 	defer actionConn.Close()
