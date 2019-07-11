@@ -122,9 +122,9 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                 name: room.name,
 
                 // TODO: determine whether the user has joined and has notif
-                hasJoined: false,
-                hasNotification: false,
-                isDM: false
+                hasJoined: room.hasJoined,
+                hasNotification: room.hasNotification,
+                isDM: room.type === 1
             })))
         })
 

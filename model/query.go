@@ -3,6 +3,7 @@ package model
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -14,20 +15,21 @@ import (
 
 //GetUsersInARoom : get all users for a particular room.
 func GetUsersInARoom(db *gorm.DB, roomID uint) ([]*User, error) {
-	sqlStatement := `
-	SELECT users.id, users.name
-	FROM userroom, users
-	WHERE room_id = ?;`
+	rows, err := db.Debug().Select("users.id, users.name").
+		Table("users").
+		Joins("LEFT JOIN usersrooms ON users.id = usersrooms.user_id").
+		Where("usersrooms.room_id = ?", roomID).Rows()
 
-	rows, err := db.Raw(sqlStatement, roomID).Rows()
 	if err != nil {
 		return []*User{}, err
 	}
+
+	users := []*User{}
+
 	defer rows.Close()
-	var users []*User
 	for rows.Next() {
-		var user *User
-		err = rows.Scan(&user.ID, &user.Name)
+		user := &User{}
+		err = db.ScanRows(rows, user)
 		if err != nil {
 			// handle this error
 			return []*User{}, err
@@ -69,19 +71,23 @@ func GetRooms(db *gorm.DB, userID uint) ([]*RoomDetail, error) {
 
 // GetAllMessagesFromRoom get all messages for a particular room.
 func GetAllMessagesFromRoom(db *gorm.DB, roomID uint) ([]*Message, error) {
-	rows, err := db.Table("messages").
-		Select("messages.id, messages.time, users.name, messages.body, messages.sender_id, messages.room_id").
+	rows, err := db.Debug().Table("messages").
+		Select("messages.id, messages.time, messages.body, messages.sender_id, messages.room_id, users.name").
 		Joins("join users on messages.sender_id = users.id").
 		Where("messages.room_id = ?", roomID).
 		Rows()
+
 	if err != nil {
 		return []*Message{}, err
 	}
+
+	messages := []*Message{}
+
 	defer rows.Close()
-	var messages []*Message
 	for rows.Next() {
-		var message *Message
-		err = rows.Scan(&message)
+		message := &Message{}
+		err = db.ScanRows(rows, message)
+		fmt.Println(message)
 		if err != nil {
 			return []*Message{}, err
 		}
@@ -101,9 +107,11 @@ func UpdateNotificationStatus(db *gorm.DB, roomID uint, userID uint, hasUnread b
 
 // GetUserNameByID: get a user's name by id
 func GetUserNameByID(db *gorm.DB, user_id uint) string {
-	var userName string
+	userName := struct {
+		Name string
+	}{}
 	db.Table("users").Select("name").Where("id = ?", user_id).Scan(&userName)
-	return userName
+	return userName.Name
 }
 
 // InsertUser: insert a new user
@@ -153,6 +161,6 @@ func InsertUserroom(db *gorm.DB, user_id uint, room_id uint, unread bool) error 
 func InsertMessage(db *gorm.DB, time time.Time, body string, sender_id uint, room_id uint) error {
 	sqlStatement := `
 	INSERT INTO messages (time, body, sender_id, room_id)
-	VALUES(?,'?',?,?)`
-	return db.Exec(sqlStatement, time).Error
+	VALUES(?,?,?,?)`
+	return db.Exec(sqlStatement, time, body, sender_id, room_id).Error
 }

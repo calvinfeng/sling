@@ -11,8 +11,6 @@ import (
 // GetRoomsHandler returns a handler that gets all current rooms.
 func GetRoomsHandler(db *gorm.DB) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		var rooms []*model.RoomDetail
-
 		// Grab current user
 		token := ctx.Request().Header.Get("Token")
 		user, err := findUserByToken(db, token)
