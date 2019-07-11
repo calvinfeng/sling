@@ -1,9 +1,10 @@
 package handler
 
 import (
-	"github.com/calvinfeng/sling/util"
 	"net/http"
 	"strings"
+
+	"github.com/calvinfeng/sling/util"
 
 	"github.com/dgrijalva/jwt-go"
 
@@ -19,11 +20,6 @@ type (
 	Credential struct {
 		Username string `json:"name"`
 		Password string `json:"password"`
-	}
-
-	// TokenCredential is a payload that captures user submitted token
-	TokenCredential struct {
-		jwtToken string `json:"jwtToken"`
 	}
 
 	// TokenResponse is a payload that returns JWT token back to client.

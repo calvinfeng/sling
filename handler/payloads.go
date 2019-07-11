@@ -16,21 +16,21 @@ import (
 // MessagePayload holds the message content to be communicated from the
 // client frontend, to the server and message broker
 type MessagePayload struct {
-	userID uint   `json:"userID"`
-	roomID uint   `json:"roomID"`
-	time   string `json:"time"`
-	body   string `json:"body"`
+	UserID uint   `json:"userID"`
+	RoomID uint   `json:"roomID"`
+	Time   string `json:"time"`
+	Body   string `json:"body"`
 }
 
 // ActionPayload holds the action content to be communicated from the
 // client frontend, to the server and message broker
 type ActionPayload struct {
-	actionType  string `json:"actionType"`
-	userID      uint   `json:"userID"`
-	roomID      uint   `json:"roomID"`
-	newRoomID   uint   `json:"newRoomID"`
-	dmUserID    uint   `json:"dmUserID"`
-	newRoomName string `json:"newRoomName"`
+	ActionType  string `json:"actionType"`
+	UserID      uint   `json:"userID"`
+	RoomID      uint   `json:"roomID"`
+	NewRoomID   uint   `json:"newRoomID"`
+	DMUserID    uint   `json:"dmUserID"`
+	NewRoomName string `json:"newRoomName"`
 }
 
 /***************** MessageBroker to Client payload Types *****************/
@@ -38,20 +38,20 @@ type ActionPayload struct {
 // MessageResponsePayload holds the message content to be communicated from the
 // message broker to users logged on
 type MessageResponsePayload struct {
-	messageType string `json:"messageType"`
-	userID      uint   `json:"userID"`
-	roomID      uint   `json:"roomID"`
-	time        string `json:"time"`
-	body        string `json:"body"`
+	MessageType string `json:"messageType"`
+	UserID      uint   `json:"userID"`
+	RoomID      uint   `json:"roomID"`
+	Time        string `json:"time"`
+	Body        string `json:"body"`
 }
 
 // ActionResponsePayload holds the message content to be communicated from the
 // message broker to users logged on
 type ActionResponsePayload struct {
-	actionType     string           `json:"actionType"`
-	userID         uint             `json:"userID"`
-	roomID         uint             `json:"roomID"`
-	userName       string           `json:"userName"`
-	roomName       string           `json:"roomName"`
-	messageHistory []*model.Message `json:"messageHistory"`
+	ActionType     string           `json:"actionType"`
+	UserID         uint             `json:"userID"`
+	RoomID         uint             `json:"roomID"`
+	UserName       string           `json:"userName"`
+	RoomName       string           `json:"roomName"`
+	MessageHistory []*model.Message `json:"messageHistory"`
 }

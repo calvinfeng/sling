@@ -13,24 +13,24 @@ import (
 )
 
 func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
-	// DATABASE update usersrooms to have no unread notifications on p.roomId, p.userId
+	// DATABASE update usersrooms to have no unread notifications on p.roomId, p.UserID
 
 	// update groupByRoomID
-	cli := mb.clientByID[p.userID]
-	cli.SetRoomID(p.newRoomID)
-	if mb.groupByRoomID[p.newRoomID] == nil {
-		mb.groupByRoomID[p.newRoomID] = make(map[uint]Client)
+	cli := mb.clientByID[p.UserID]
+	cli.SetRoomID(p.NewRoomID)
+	if mb.groupByRoomID[p.NewRoomID] == nil {
+		mb.groupByRoomID[p.NewRoomID] = make(map[uint]Client)
 	}
-	delete(mb.groupByRoomID[p.roomID], p.userID)
-	mb.groupByRoomID[p.newRoomID][p.userID] = cli
+	delete(mb.groupByRoomID[p.RoomID], p.UserID)
+	mb.groupByRoomID[p.NewRoomID][p.UserID] = cli
 
-	// DATABASE fetch list of messages in p.newRoomID
+	// DATABASE fetch list of messages in p.NewRoomID
 	// let messageHistory = list of messages type *model.Message (from dataModel)
 	var messageHistory []*model.Message
 
 	responsePayload := ActionResponsePayload{
-		actionType:     "message_history",
-		messageHistory: messageHistory,
+		ActionType:     "message_history",
+		MessageHistory: messageHistory,
 	}
 
 	cli.WriteActionQueue() <- responsePayload
@@ -38,59 +38,59 @@ func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 
 func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
 	// DATABASE update rooms to have new room of type dm with
-	// users p.dmUserID and p.userID
+	// users p.dmUserID and p.UserID
 	// DATABASE update usersrooms to mark new room as unread
 
-	// return the new roomID and roomName
-	var roomID uint = 0
+	// return the new RoomID and roomName
+	var roomID uint
 	roomName := "roomName"
 
 	responsePayload := ActionResponsePayload{
-		actionType: "create_dm",
-		roomID:     roomID,
-		roomName:   roomName,
+		ActionType: "create_dm",
+		RoomID:     roomID,
+		RoomName:   roomName,
 	}
 
-	// update group by roomID
-	cli := mb.clientByID[p.userID]
+	// update group by RoomID
+	cli := mb.clientByID[p.UserID]
 	if mb.groupByRoomID[roomID] == nil {
 		mb.groupByRoomID[roomID] = make(map[uint]Client)
 	}
 	if mb.groupByRoomID[cli.RoomID()] != nil {
-		delete(mb.groupByRoomID[cli.RoomID()], p.userID)
+		delete(mb.groupByRoomID[cli.RoomID()], p.UserID)
 	}
 	cli.SetRoomID(roomID)
-	mb.groupByRoomID[roomID][p.userID] = cli
+	mb.groupByRoomID[roomID][p.UserID] = cli
 
 	// send new dm notification to users logged on
-	if cli, ok := mb.clientByID[p.dmUserID]; ok {
+	if cli, ok := mb.clientByID[p.DMUserID]; ok {
 		cli.WriteActionQueue() <- responsePayload
 	}
 }
 
 func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
-	// DATABASE update usersrooms to have room p.newRoomID and
-	// p.userID, read
+	// DATABASE update usersrooms to have room p.NewRoomID and
+	// p.UserID, read
 
-	// DATABASE fetch list of messages in p.newRoomID
-	// let messageHistory = list of messages type *model.Message (from dataModel)
-	var messageHistory []*model.Message
+	// DATABASE fetch list of messages in p.NewRoomID
+	// let MessageHistory = list of messages type *model.Message (from dataModel)
+	var MessageHistory []*model.Message
 
 	responsePayload := ActionResponsePayload{
-		actionType:     "message_history",
-		messageHistory: messageHistory,
+		ActionType:     "message_history",
+		MessageHistory: MessageHistory,
 	}
 
-	// update group by roomID
-	cli := mb.clientByID[p.userID]
-	if mb.groupByRoomID[p.newRoomID] == nil {
-		mb.groupByRoomID[p.newRoomID] = make(map[uint]Client)
+	// update group by RoomID
+	cli := mb.clientByID[p.UserID]
+	if mb.groupByRoomID[p.NewRoomID] == nil {
+		mb.groupByRoomID[p.NewRoomID] = make(map[uint]Client)
 	}
 	if mb.groupByRoomID[cli.RoomID()] != nil {
-		delete(mb.groupByRoomID[cli.RoomID()], p.userID)
+		delete(mb.groupByRoomID[cli.RoomID()], p.UserID)
 	}
-	cli.SetRoomID(p.newRoomID)
-	mb.groupByRoomID[p.newRoomID][p.userID] = cli
+	cli.SetRoomID(p.NewRoomID)
+	mb.groupByRoomID[p.NewRoomID][p.UserID] = cli
 
 	cli.WriteActionQueue() <- responsePayload
 }
@@ -102,9 +102,9 @@ func (mb *MessageBroker) handleCreateUser(p ActionPayload) {
 	userName := "userName"
 
 	responsePayload := ActionResponsePayload{
-		actionType: "new_user",
-		userID:     p.userID,
-		userName:   userName,
+		ActionType: "new_user",
+		UserID:     p.UserID,
+		UserName:   userName,
 	}
 
 	// broadcast new user message to all users logged on
@@ -116,9 +116,9 @@ func (mb *MessageBroker) handleCreateUser(p ActionPayload) {
 func (mb *MessageBroker) handleCreateRoom(p ActionPayload) {
 
 	responsePayload := ActionResponsePayload{
-		actionType: "new_user",
-		roomID:     p.roomID,
-		roomName:   p.newRoomName,
+		ActionType: "new_user",
+		RoomID:     p.RoomID,
+		RoomName:   p.NewRoomName,
 	}
 
 	// broadcast new user message to all users logged on
