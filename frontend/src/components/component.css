@@ -1,31 +1,66 @@
 .SBcurUser {
     font-size: 20px;
     height: 30px;
-    text-align: center;
     margin-bottom: 10px;
 }
 
 .SBlabel {
     font-size: 16px;
-    padding:20px 10px;
+    margin: 20px 10px;
+}
+
+.SBmore {
+    font-size: 15px;
+    margin: 0 1rem;
+    color: #333;
+    padding: 0.25rem;
+    border-radius: 5px;
+}
+
+.SBnone {
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 1rem;
+    margin-left: 1rem;
 }
 
 .SBlist  {
     list-style-type: none;
+    padding-left: 0;
+    margin-bottom: 0.4rem;
 }
+
 .SBlist > li {
     height: 20px;
-    width: 80px;
+    width: 80%;
     padding: 5px;
     margin-top: 2px;
 }
+
+.SBhoverable {
+    cursor: pointer;
+}
+
+.SBhoverable:hover {
+    background-color: #bbb
+}
+
+.SBMoreUser {
+    margin-bottom: 1rem;
+}
+
+.SBdmuser {
+    border-radius: 10px;
+}
+
 .curroom {
     font-weight: bold;
-    border-radius: 10px
+    border-radius: 10px;
+    background-color: #ddd;
 }
 
 .notification {
-    border: 1px solid red;
+    box-shadow:inset 0px 0px 0px 1px red;
     border-radius: 10px
 }
 
@@ -34,13 +69,43 @@
 }
 
 .DWlabel {
-    font-size: 16px;
+    font-size: 40px;
     height: 30px;
     text-align: center;
     padding-top:5px;
 }
 
 .DWmessage {
-    padding-left:20px;
-    padding-bottom: 10px;
+    border-radius: 4px;
+    margin: 0.5rem 1rem;
+    padding: 0.5rem;
+}
+
+.DWmessage:hover {
+    background-color: #eee;
+}
+
+.DWusername {
+    font-size: 14px;
+    font-weight: bold;
+    margin-right: 0.25rem;
+}
+
+.DWtime {
+    font-size: 14px;
+    color: #666;
+}
+
+.DWmessagebody {
+    font-size: 16px;
+    overflow-wrap: break-word;
+}
+
+.input-box {
+    width: 80%;
+    height: 100%;
+}
+
+.input-submit {
+    height: 100%;
 }

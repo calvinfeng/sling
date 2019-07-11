@@ -1,10 +1,12 @@
 export interface User {
     username: string
     id?: number
-    jwtToken: string
+    jwtToken?: string
 }
 
 export interface Message {
+    msgID?: number
+    userID?: number
     username: string
     time: Date
     body: string

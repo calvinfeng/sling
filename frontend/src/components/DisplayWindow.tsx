@@ -1,61 +1,40 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { MessageType } from '../store/sling/index';
+import { Message, Room } from '../types';
 import './component.css';
+import moment from 'moment'
 
 export interface DisplayWindowProps {
+    messages: Message[]
+    curRoom: Room
+}
+
+export interface DisplayWindowState {
     
 }
- 
-export interface DisplayWindowState {
-    roomName: string;
-    messages: MessageType[];
-}
- 
+
 class DisplayWindow extends Component<DisplayWindowProps, DisplayWindowState> {
-    constructor(props: DisplayWindowProps) {
-        super(props);
-        this.state = {
-            roomName: "Ah ha!",
-            messages: [
-            {
-                msgID: 1,
-                userID:1,
-                userName: "Bob",
-                time: "12:03 am",
-                body:"Hi",
-
-            },
-            {
-                msgID: 2,
-                userID: 2,
-                userName: "Alice",
-                time: "12:04 am",
-                body:"Hi",
-
-            },
-        ],
-        };
-    }
-   
-    render() { 
-        const displayMessages = this.state.messages.map((msg) =>
+    render() {
+        const displayMessages = this.props.messages.map((msg) =>
             <div key={msg.msgID} className="DWmessage">
-                <div>{msg.userName} {msg.time} </div>
-                <div>{msg.body}</div>
+                <div>
+                    <span className="DWusername">{msg.username} </span>
+                    <span className="DWtime">{moment(msg.time).fromNow()}</span>
+                </div>
+                <div className="DWmessagebody">{msg.body}</div>
             </div>
         );
-        return ( 
+        return (
             <div>
-                <div className="DWlabel"> 
-                    <label>Channel: {this.state.roomName}</label>
+                <div className="DWlabel">
+                    <label>#{this.props.curRoom.name}</label>
                 </div>
-                <div>
+                <div className="DWmessages">
                     {displayMessages}
                 </div>
             </div>
-         );
+        );
     }
 }
- 
+
 export default DisplayWindow;

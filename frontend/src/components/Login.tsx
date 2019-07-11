@@ -27,11 +27,16 @@ type LoginState = {
     loading: boolean
 }
 
-const mapDispatchToProps = (dispatch: Dispatch<AppActionTypes>) => {
+type OwnProps = {
+    setLoggedIn: Function
+}
+
+const mapDispatchToProps = (dispatch: Dispatch<AppActionTypes>, ownProps: OwnProps) => {
     return {
         onLogIn: (user: User) => {
             dispatch(logIn(user))
-        }
+        },
+        setLoggedIn: ownProps.setLoggedIn
     }
 }
 type Props = ReturnType<typeof mapDispatchToProps>
@@ -119,7 +124,7 @@ class Login extends Component<Props, LoginState> {
             jwtToken: data.jwt_token
         }
         this.props.onLogIn(user)
-        // TODO: transition to message screen
+        this.props.setLoggedIn()
     }
 
     render() {
