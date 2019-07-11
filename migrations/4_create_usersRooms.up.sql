@@ -1,7 +1,7 @@
 CREATE TABLE usersrooms (
   user_id INTEGER REFERENCES users(id),
   room_id INTEGER REFERENCES rooms(id),
-  unread BIT
+  unread BOOLEAN
 );
 
 CREATE INDEX ON messages(sender_id);
