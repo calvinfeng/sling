@@ -3,7 +3,6 @@ import { Component } from 'react';
 import { Room, User } from '../types'
 import { Button } from '@material-ui/core'
 import './component.css'
-import curUser from '../reducers/curUser';
 
 type SideBarProps = {
     curUser: User
@@ -33,8 +32,8 @@ class SideBar extends Component<SideBarProps, SideBarState> {
     }
 
 
-    shouldComponentUpdate(nextProps: SideBarProps): boolean {
-        return true
+    shouldComponentUpdate(nextProps: SideBarProps): boolean { 
+        return true // TODO: proper update logic
     }
 
     handleDisplayMoreChannel = () => {
