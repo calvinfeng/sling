@@ -131,7 +131,7 @@ func (mb *MessageBroker) handleCreateRoom(p ActionPayload) {
 
 	responsePayload := ActionResponsePayload{
 		ActionType: "new_room",
-		RoomID:     p.RoomID,
+		RoomID:     roomID,
 		RoomName:   p.NewRoomName,
 	}
 

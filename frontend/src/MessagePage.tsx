@@ -75,8 +75,8 @@ const mapDispatchToProps = (dispatch: React.Dispatch<AppActionTypes>) => {
 type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>
 
 class MessagePage extends React.Component<Props, MessagePageState> {
-    // private msgWebsocket: WebSocket
-    // private actWebsocket: WebSocket
+    private msgWebsocket!: WebSocket
+    private actWebsocket!: WebSocket 
     readonly state: MessagePageState = initialState
     private messagesEnd = React.createRef<HTMLDivElement>()
 
@@ -136,28 +136,40 @@ class MessagePage extends React.Component<Props, MessagePageState> {
         }).finally(() => {
             console.log(this.state)
             this.setState({ loading: false })
+            console.log("before sockets")
+
+            // // Set up websocket handlers
+            this.msgWebsocket = new WebSocket("ws://localhost:8888/api/stream/messages")
+            this.actWebsocket = new WebSocket("ws://localhost:8888/api/stream/actions")
+            console.log("after sockets")
+            console.log("after send")
+ 
+            this.msgWebsocket.onopen = this.handleMsgWebsocketOpen
+            this.msgWebsocket.onclose = this.handleMsgWebsocketClose
+            // this.msgWebsocket.onmessage = this.handleMsgWebsocketMessage
+            this.msgWebsocket.onerror = this.handleMsgWebsocketError
+            this.actWebsocket.onopen = this.handleActWebsocketOpen
+            this.actWebsocket.onclose = this.handleActWebsocketClose
+            this.actWebsocket.onerror = this.handleActWebsocketError
+            // this.actWebsocket.onmessage = this.handleActWebsocketMessage
         })
 
-        // // Set up websocket handlers
-        // this.msgWebsocket = new WebSocket("ws://localhost:8000/streams/messages")
-        // this.actWebsocket = new WebSocket("ws://localhost:8000/streams/actions")
-        // this.msgWebsocket.onopen = this.handleMsgWebsocketOpen
-        // this.msgWebsocket.onclose = this.handleMsgWebsocketClose
-        // this.msgWebsocket.onmessage = this.handleMsgWebsocketMessage
-        // this.msgWebsocket.onerror = this.handleMsgWebsocketError
-        // this.actWebsocket.onopen = this.handleActWebsocketOpen
-        // this.actWebsocket.onclose = this.handleActWebsocketClose
-        // this.actWebsocket.onerror = this.handleActWebsocketError
-        // this.actWebsocket.onmessage = this.handleActWebsocketMessage
     }
 
-    // handleMsgWebsocketOpen = (ev: Event) => {
-    //     this.setState({connectedToMsgSocket: true,});
-    // }
+    handleMsgWebsocketOpen = (ev: Event) => {
+        if (this.props.curUser != null){
+            var token = this.props.curUser.jwtToken
+            this.msgWebsocket.send(JSON.stringify({jwt_token: token}));
+        }
+        else {
+            console.log("curUser is null")
+        }
+        this.setState({connectedToMsgSocket: true,});
+    }
 
-    // handleMsgWebsocketClose = (ev:CloseEvent) => {
-    //     this.setState({connectedToMsgSocket: false,});
-    // }
+    handleMsgWebsocketClose = (ev:CloseEvent) => {
+        this.setState({connectedToMsgSocket: false,});
+    }
 
     // handleMsgWebsocketMessage = (mev:MessageEvent) => {
     //     const msgResponsePayload = JSON.parse(mev.data);
@@ -174,21 +186,28 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     //     }
     // }
 
-    // handleMsgWebsocketError = (ev:Event) => {
-    //     this.setState({ error: "encountered message websocket error" + ev })
-    // }
+    handleMsgWebsocketError = (ev:Event) => {
+        this.setState({ error: "encountered message websocket error" + ev })
+    }
 
-    // handleActWebsocketOpen = (ev: Event) => {
-    //     this.setState({connectedToActSocket: true,});
-    // }
+    handleActWebsocketOpen = (ev: Event) => {
+        if (this.props.curUser != null){
+            var token = this.props.curUser.jwtToken
+            this.actWebsocket.send(JSON.stringify({jwt_token: token}));
+        }
+        else {
+            console.log("curUser is null")
+        }
+        this.setState({connectedToActSocket: true,});
+    }
 
-    // handleActWebsocketClose = (ev:CloseEvent) => {
-    //     this.setState({connectedToActSocket: false,});
-    // }
+    handleActWebsocketClose = (ev:CloseEvent) => {
+        this.setState({connectedToActSocket: false,});
+    }
 
-    // handleActWebsocketError = (ev:Event) => {
-    //     this.setState({ error: "encountered action websocket error" + ev })
-    // }
+    handleActWebsocketError = (ev:Event) => {
+        this.setState({ error: "encountered action websocket error" + ev })
+    }
 
     // handleActWebsocketMessage = (mev:MessageEvent) => {
     //     const actResponsePayload = JSON.parse(mev.data);
@@ -245,6 +264,22 @@ class MessagePage extends React.Component<Props, MessagePageState> {
         this.props.onChangeRoom(nextRoom)
 
         // TODO: load next room's messages
+        // var actionPayload = {
+        //     actionType: ,
+        //     userID
+        //     roomID
+        //     newRoomID
+        //     dmUserID
+        //     newR
+        //         ActionType  string `json:"actionType"`
+        //         UserID      uint   `json:"userID"`
+        //         RoomID      uint   `json:"roomID"`
+        //         NewRoomID   uint   `json:"newRoomID"`
+        //         DMUserID    uint   `json:"dmUserID"`
+        //         NewRoomName string `json:"newRoomName"`
+        //     }
+        // }
+        // this.actWebsocket.send(JSON.stringify)
     }
 
     startDM(user: User) {
