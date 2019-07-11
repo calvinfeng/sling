@@ -4,5 +4,5 @@ CREATE TABLE usersrooms (
   unread BOOLEAN
 );
 
-CREATE INDEX ON messages(sender_id);
-CREATE INDEX ON messages(room_id);
+CREATE INDEX ON usersrooms(user_id);
+CREATE INDEX ON usersrooms(room_id);

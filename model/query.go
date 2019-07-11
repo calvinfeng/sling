@@ -3,6 +3,7 @@ package model
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -14,20 +15,21 @@ import (
 
 //GetUsersInARoom : get all users for a particular room.
 func GetUsersInARoom(db *gorm.DB, roomID uint) ([]*User, error) {
-	sqlStatement := `
-	SELECT users.id, users.name
-	FROM userroom, users
-	WHERE room_id = ?;`
+	rows, err := db.Debug().Select("users.id, users.name").
+		Table("users").
+		Joins("LEFT JOIN usersrooms ON users.id = usersrooms.user_id").
+		Where("usersrooms.room_id = ?", roomID).Rows()
 
-	rows, err := db.Raw(sqlStatement, roomID).Rows()
 	if err != nil {
 		return []*User{}, err
 	}
+
+	users := []*User{}
+
 	defer rows.Close()
-	var users []*User
 	for rows.Next() {
-		var user *User
-		err = rows.Scan(&user.ID, &user.Name)
+		user := &User{}
+		err = db.ScanRows(rows, user)
 		if err != nil {
 			// handle this error
 			return []*User{}, err
@@ -38,26 +40,29 @@ func GetUsersInARoom(db *gorm.DB, roomID uint) ([]*User, error) {
 }
 
 //GetRooms: get all rooms, populating whether given user has joined and notification status.
-func GetRooms(db *gorm.DB, userID uint) ([]*Room, error) {
-	sqlStatement := `
-	SELECT rooms.id, rooms.name, usersrooms.user_id IS NULL as inroom, 
-	COALESCE(usersrooms.unread, false), rooms.room_type
-	FROM rooms LEFT JOIN usersrooms
-	ON rooms.id = usersrooms.room_id
-	WHERE usersrooms.user_id=? OR usersrooms.user_id IS NULL;`
+func GetRooms(db *gorm.DB, userID uint) ([]*RoomDetail, error) {
+	rooms := []*RoomDetail{}
+	subquery := db.Select("usersrooms.*").Table("usersrooms").Where("user_id = ?", userID).SubQuery()
+	rows, err := db.Debug().Select(`rooms.id, rooms.name, rooms.room_type,
+		ur.user_id IS NOT NULL as inroom, COALESCE(ur.unread, false) as unread`).
+		Table("rooms").
+		Joins("LEFT JOIN ? as ur ON rooms.id = ur.room_id", subquery).
+		Rows()
 
-	rows, err := db.Exec(sqlStatement).Rows()
-	if err != nil {
-		return []*Room{}, err
+	if gorm.IsRecordNotFoundError(err) {
+		return rooms, nil
 	}
+
+	if err != nil {
+		return rooms, err
+	}
+
 	defer rows.Close()
-	var rooms []*Room
 	for rows.Next() {
-		var room *Room
-		err = rows.Scan(&room.ID, &room.RoomName, &room)
+		room := &RoomDetail{}
+		err = db.ScanRows(rows, room)
 		if err != nil {
-			// handle this error
-			return []*Room{}, err
+			return []*RoomDetail{}, err
 		}
 		rooms = append(rooms, room)
 	}
@@ -66,19 +71,23 @@ func GetRooms(db *gorm.DB, userID uint) ([]*Room, error) {
 
 // GetAllMessagesFromRoom get all messages for a particular room.
 func GetAllMessagesFromRoom(db *gorm.DB, roomID uint) ([]*Message, error) {
-	rows, err := db.Table("messages").
-		Select("messages.id, messages.time, users.name, messages.body, messages.sender_id, messages.room_id").
+	rows, err := db.Debug().Table("messages").
+		Select("messages.id, messages.time, messages.body, messages.sender_id, messages.room_id, users.name").
 		Joins("join users on messages.sender_id = users.id").
 		Where("messages.room_id = ?", roomID).
 		Rows()
+
 	if err != nil {
 		return []*Message{}, err
 	}
+
+	messages := []*Message{}
+
 	defer rows.Close()
-	var messages []*Message
 	for rows.Next() {
-		var message *Message
-		err = rows.Scan(&message)
+		message := &Message{}
+		err = db.ScanRows(rows, message)
+		fmt.Println(message)
 		if err != nil {
 			return []*Message{}, err
 		}
@@ -98,9 +107,11 @@ func UpdateNotificationStatus(db *gorm.DB, roomID uint, userID uint, hasUnread b
 
 // GetUserNameByID: get a user's name by id
 func GetUserNameByID(db *gorm.DB, user_id uint) string {
-	var userName string
+	userName := struct {
+		Name string
+	}{}
 	db.Table("users").Select("name").Where("id = ?", user_id).Scan(&userName)
-	return userName
+	return userName.Name
 }
 
 // InsertUser: insert a new user
@@ -150,6 +161,6 @@ func InsertUserroom(db *gorm.DB, user_id uint, room_id uint, unread bool) error 
 func InsertMessage(db *gorm.DB, time time.Time, body string, sender_id uint, room_id uint) error {
 	sqlStatement := `
 	INSERT INTO messages (time, body, sender_id, room_id)
-	VALUES(?,'?',?,?)`
-	return db.Exec(sqlStatement, time).Error
+	VALUES(?,?,?,?)`
+	return db.Exec(sqlStatement, time, body, sender_id, room_id).Error
 }

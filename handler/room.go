@@ -11,11 +11,16 @@ import (
 // GetRoomsHandler returns a handler that gets all current rooms.
 func GetRoomsHandler(db *gorm.DB) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
-		var rooms []*model.Room
+		// Grab current user
+		token := ctx.Request().Header.Get("Token")
+		user, err := findUserByToken(db, token)
+		if err != nil {
+			return echo.NewHTTPError(http.StatusUnauthorized, err)
+		}
 
-		// need to query all rooms, mark registered, joined and has notification
-		if err := db.Find(&rooms).Error; err != nil {
-			return echo.NewHTTPError(http.StatusNotFound, err)
+		rooms, dbErr := model.GetRooms(db, user.ID)
+		if dbErr != nil {
+			return echo.NewHTTPError(http.StatusInternalServerError, err)
 		}
 
 		return ctx.JSON(http.StatusOK, rooms)
