@@ -84,8 +84,12 @@ class SideBar extends Component<SideBarProps, SideBarState> {
         return this.props.rooms.filter((room): boolean =>
             room.hasJoined === hasJoined &&
             room.isDM === isDM
-        ).map((room) =>
-            <li
+        ).map((room) => {
+            if (isDM) {
+                room.name = this.findDirectMsgName(room.name)
+            }
+            
+            return <li
                 className={`SBhoverable ${this.getClassName(room)}`}
                 key={room.id}
                 onClick={hasJoined ?
@@ -95,7 +99,7 @@ class SideBar extends Component<SideBarProps, SideBarState> {
             >
                 {room.name}
             </li>
-        );
+        });
     }
 
     render() {
