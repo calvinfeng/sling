@@ -1,139 +1,155 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { RoomType, UserType } from '../store/sling/index'
+import { Room, User } from '../types'
+import { Button } from '@material-ui/core'
 import './component.css'
 
 export interface SideBarProps {
-    
-}
- 
-export interface SideBarState {
-    curUserName: string,
-    curRoom: RoomType,
-    rooms: RoomType[],
-    users: UserType[],
-    displayMore: boolean,
+    curUser: User
+    curRoom: Room | null
+    users: User[]
+    rooms: Room[]
+
+    logOut: Function
+    changeRoom: Function
+    startDM: Function
+    joinRoom: Function
 }
 
- 
-class  SideBar extends Component<SideBarProps, SideBarState> {
+export interface SideBarState {
+    displayMoreChannel: boolean
+    displayMoreUser: boolean
+}
+
+
+class SideBar extends Component<SideBarProps, SideBarState> {
     constructor(props: SideBarProps) {
         super(props);
         this.state = {
-            curUserName: "a",
-            curRoom: {
-                roomID: 1,
-                roomName: "test",
-                hasJoined: true,
-                hasNotification: true,
-                isDirectMessage: false,
-            },
-            rooms:[
-                {
-                    roomID: 3,
-                    roomName: "Room1",
-                    hasJoined:true,
-                    hasNotification:true,
-                    isDirectMessage:false,
-                },
-                {
-                    roomID: 2,
-                    roomName: "a~b",
-                    hasJoined:true,
-                    hasNotification:false,
-                    isDirectMessage:true,
-                },
-                {
-                    roomID: 1,
-                    roomName: "test",
-                    hasJoined: true,
-                    hasNotification: true,
-                    isDirectMessage: false,
-                }
-            ],
-            users:[
-                {
-                    userID: 1,
-                    userName: "Calvin"
-                },
-            ],
-            displayMore: false,
+            displayMoreChannel: false,
+            displayMoreUser: false
         };
     }
 
-    handleDisplayMoreUser = () => {
-        this.setState ({
-            displayMore: !this.state.displayMore,
+
+    shouldComponentUpdate(nextProps: SideBarProps): boolean {
+        return true
+    }
+
+    handleDisplayMoreChannel = () => {
+        this.setState({
+            displayMoreChannel: !this.state.displayMoreChannel,
         })
     }
 
-    hasJoined = (room: RoomType) =>{
-        return room.hasJoined;
+    handleDisplayMoreUser = () => {
+        this.setState({
+            displayMoreUser: !this.state.displayMoreUser,
+        })
     }
 
-    isDirectMsg = (room: RoomType) => {
-        return room.isDirectMessage;
-    }
-
-    isNotDirectMsg = (room: RoomType) => {
-        return !room.isDirectMessage;
-    }
-
-    findDirectMsgName =(roomName: string) => {
-        const names:string[] = roomName.split("~")
-        if (names[0] !== this.state.curUserName) return names[0];
+    findDirectMsgName = (name: string) => {
+        const names: string[] = name.split("~")
+        if (names[0] !== this.props.curUser.username) return names[0];
         return names[1];
     }
 
-    getClassName = ( room: RoomType ) => {
-        if (room.roomID === this.state.curRoom.roomID) return "curroom";
+    getClassName = (room: Room) => {
+        if (this.props.curRoom && room.id === this.props.curRoom!.id) return "curroom";
         if (room.hasNotification) return "notification";
         return "normal";
     }
 
-    render() { 
-        const { hasJoined, isDirectMsg, findDirectMsgName, getClassName, isNotDirectMsg} = this;
+    renderUserList = () => {
+        return this.props.users.map((user) =>
+            <li
+                className="SBhoverable SBdmuser"
+                key={user.id}
+                onClick={(e) => this.props.startDM(user)}
+            >
+                {user.username}
+            </li>
+        )
+    }
 
-        const listItems = this.state.rooms.filter(hasJoined).filter(isNotDirectMsg).map ((room) =>       
-            <li className={getClassName(room)} key={room.roomID}>{room.roomName}</li>        
+    renderChannels = (hasJoined: boolean, isDM: boolean) => {
+        return this.props.rooms.filter((room): boolean =>
+            room.hasJoined === hasJoined &&
+            room.isDM === isDM
+        ).map((room) =>
+            <li
+                className={`SBhoverable ${this.getClassName(room)}`}
+                key={room.id}
+                onClick={hasJoined ?
+                    (e) => this.props.changeRoom(room) :
+                    (e) => this.props.joinRoom(room)
+                }
+            >
+                {room.name}
+            </li>
         );
+    }
 
-        const userItems = this.state.rooms.filter(isDirectMsg).map ((room) =>
-            <li className={getClassName(room)} key={room.roomID}>{findDirectMsgName(room.roomName)}</li>
-        );
+    render() {
+        let listItems = this.renderChannels(true, false)
+        let userItems = this.renderChannels(true, true)
+        let unjoinedChannels = this.renderChannels(false, false)
+        let noDMUsers = this.renderUserList()
 
-        let moreUser = (<label onClick={this.handleDisplayMoreUser } className="SBlabel">+ More People</label>);
-        if (this.state.displayMore) {
-            moreUser = (
-                <div>
-                    <label onClick={this.handleDisplayMoreUser } className="SBlabel">+ More People</label>
-                    <ul className="SBlist">
-                        {this.state.users.map ((user) =>
-                            <li key={user.userID}> {user.userName} </li>
-                        )}
-                    </ul>
-                </div>    
-            );
-        }
+        let moreChannel = <label onClick={this.handleDisplayMoreChannel} className="SBmore SBhoverable">
+            {this.state.displayMoreChannel ? '-' : '+'} More Channels
+        </label>
+        let moreUser = <label onClick={this.handleDisplayMoreUser} className="SBmore SBhoverable">
+            {this.state.displayMoreUser ? '-' : '+'} More People
+        </label>
+
         return (
             <div>
                 <div className="SBcurUser">
-                    <label>{this.state.curUserName}'s sling</label>  
+                    <label>{this.props.curUser!.username}'s sling</label>
+                    <Button
+                        onClick={() => this.props.logOut()}
+                        className="SBlogout"
+                        color="secondary"
+                    >
+                        Log out
+                    </Button>
                 </div>
                 <div >
                     <div className="SBRooms">
                         <label className="SBlabel">Channels</label>
-                        <ul className="SBlist">{listItems}</ul>
+                        {listItems.length > 0 ?
+                            <ul className="SBlist">{listItems}</ul> :
+                            <div className="SBnone">None</div>
+                        }
+
+                        <div className="SBMoreUser">
+                            {moreChannel}
+                            {this.state.displayMoreChannel && (
+                                unjoinedChannels.length > 0 ?
+                                    <ul className="SBlist">{unjoinedChannels}</ul> :
+                                    <div className="SBnone">None</div>
+                            )}
+                        </div>
+
                         <label className="SBlabel">Direct Messages</label>
-                        <ul className="SBlist">{userItems}</ul>
+                        {userItems.length > 0 ?
+                            <ul className="SBlist">{userItems}</ul> :
+                            <div className="SBnone">None</div>
+                        }
                     </div>
                     <div className="SBMoreUser">
                         {moreUser}
+                        {this.state.displayMoreUser && (
+                            noDMUsers.length > 0 ?
+                                <ul className="SBlist">{noDMUsers}</ul> :
+                                <div className="SBnone">None</div>
+                        )}
                     </div>
                 </div>
             </div>
         );
     }
 }
- 
+
 export default SideBar;

@@ -7,6 +7,7 @@ type Message struct {
 	ID         uint      `gorm:"column:id"          json:"id"`
 	CreateTime time.Time `gorm:"column:create_time"        json:"create_time"`
 	Body       string    `gorm:"column:body"        json:"body"`
+	SenderName   string    `gorm:"column:sender_name"        json:"sender_name"`
 
 	// Foreign keys
 	UserID uint `gorm:"column:user_id"       json:"user_id"`

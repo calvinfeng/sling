@@ -10,7 +10,7 @@ type Userroom struct {
 
 // TableName tells GORM where to find this record.
 func (Userroom) TableName() string {
-	return "userroom"
+	return "usersrooms"
 }
 
 // Validate performs validation on message model.
