@@ -35,26 +35,10 @@ const mapStateToProps = (state: AppState, ownProps: OwnProps) => ({ ...state, ..
 type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof dispatchActions>
 
 class MessagePage extends React.Component<Props, MessagePageState> {
-    private msgWebsocket: WebSocket
-    private actWebsocket: WebSocket
+    private msgWebsocket!: WebSocket
+    private actWebsocket!: WebSocket
     readonly state: MessagePageState = initialState
     private messagesEnd = React.createRef<HTMLDivElement>()
-
-    constructor(props: Props) {
-        super(props)
-
-        // Set up websocket handlers
-        this.msgWebsocket = new WebSocket("ws://localhost:8000/streams/messages")
-        this.actWebsocket = new WebSocket("ws://localhost:8000/streams/actions")
-        this.msgWebsocket.onopen = this.handleMsgWebsocketOpen
-        this.msgWebsocket.onclose = this.handleMsgWebsocketClose
-        this.msgWebsocket.onmessage = this.handleMsgWebsocketMessage
-        this.msgWebsocket.onerror = this.handleMsgWebsocketError
-        this.actWebsocket.onopen = this.handleActWebsocketOpen
-        this.actWebsocket.onclose = this.handleActWebsocketClose
-        this.actWebsocket.onerror = this.handleActWebsocketError
-        this.actWebsocket.onmessage = this.handleActWebsocketMessage
-    }
 
     componentDidMount() {
         let token = localStorage.getItem('jwt_token')
@@ -110,80 +94,132 @@ class MessagePage extends React.Component<Props, MessagePageState> {
         }).finally(() => {
             console.log(this.state)
             this.setState({ loading: false })
+            console.log("before sockets")
+
+            // // Set up websocket handlers
+            this.msgWebsocket = new WebSocket("ws://localhost:8888/api/stream/messages")
+            this.actWebsocket = new WebSocket("ws://localhost:8888/api/stream/actions")
+            console.log("after sockets")
+            console.log("after send")
+ 
+            this.msgWebsocket.onopen = this.handleMsgWebsocketOpen
+            this.msgWebsocket.onclose = this.handleMsgWebsocketClose
+            this.msgWebsocket.onmessage = this.handleMsgWebsocketMessage
+            this.msgWebsocket.onerror = this.handleMsgWebsocketError
+            this.actWebsocket.onopen = this.handleActWebsocketOpen
+            this.actWebsocket.onclose = this.handleActWebsocketClose
+            this.actWebsocket.onerror = this.handleActWebsocketError
+            this.actWebsocket.onmessage = this.handleActWebsocketMessage
         })
     }
 
     handleMsgWebsocketOpen = (ev: Event) => {
-        this.setState({ connectedToMsgSocket: true, });
+        if (this.props.curUser != null){
+            var token = this.props.curUser.jwtToken
+            this.msgWebsocket.send(JSON.stringify({jwt_token: token}));
+        }
+        else {
+            console.log("curUser is null")
+        }
+        this.setState({connectedToMsgSocket: true,});
     }
 
-    handleMsgWebsocketClose = (ev: CloseEvent) => {
-        this.setState({ connectedToMsgSocket: false, });
+    handleMsgWebsocketClose = (ev:CloseEvent) => {
+        this.setState({connectedToMsgSocket: false,});
     }
 
-    handleMsgWebsocketMessage = (mev: MessageEvent) => {
+    handleMsgWebsocketMessage = (mev:MessageEvent) => {
         const msgResponsePayload = JSON.parse(mev.data);
-        if (msgResponsePayload.messageType === "new_message") {
+        console.log(msgResponsePayload);
+        if (msgResponsePayload.messageType === "new_message") {  
+            if (msgResponsePayload.body === null){
+                console.log("invalid message body received - null")
+                return 
+            }
             this.props.onNewMessage({
-                msgID: null,
-                userID: null,
-                username: msgResponsePayload.userName,
+                msgID: msgResponsePayload.userID, // TODO make a real messageID
+                userID: msgResponsePayload.userID,
+                username: msgResponsePayload.userID, // TODO make username
                 time: msgResponsePayload.time,
                 body: msgResponsePayload.body,
             });
-        } else if (msgResponsePayload.messageType === "notification") {
+        } else if (msgResponsePayload.messageType === "notification"){
             this.props.onMarkUnread(msgResponsePayload.roomID);
         } else {
             console.log("undefined type")
         }
     }
 
-    handleMsgWebsocketError = (ev: Event) => {
+    handleMsgWebsocketError = (ev:Event) => {
         this.setState({ error: "encountered message websocket error" + ev })
     }
 
     handleActWebsocketOpen = (ev: Event) => {
-        this.setState({ connectedToActSocket: true, });
+        if (this.props.curUser != null){
+            var token = this.props.curUser.jwtToken
+            this.actWebsocket.send(JSON.stringify({jwt_token: token}));
+        }
+        else {
+            console.log("curUser is null")
+        }
+        this.setState({connectedToActSocket: true,});
     }
 
-    handleActWebsocketClose = (ev: CloseEvent) => {
-        this.setState({ connectedToActSocket: false, });
+    handleActWebsocketClose = (ev:CloseEvent) => {
+        this.setState({connectedToActSocket: false,});
     }
 
-    handleActWebsocketError = (ev: Event) => {
+    handleActWebsocketError = (ev:Event) => {
         this.setState({ error: "encountered action websocket error" + ev })
     }
 
-    handleActWebsocketMessage = (mev: MessageEvent) => {
-        const actResponsePayload = JSON.parse(mev.data);
+    handleActWebsocketMessage = (mev:MessageEvent) => {
+       const actResponsePayload = JSON.parse(mev.data);
+       console.log(actResponsePayload);
         if (actResponsePayload.actionType === "message_history") {
+            if (actResponsePayload.messageHistory === null){
+                console.log("invalid message history recieved")
+                return
+            } 
             const msgs = actResponsePayload.messageHistory;
             let messages = [];
-            for (let i = 0; i < msgs.length; i++) {
+            for (let i = 0; i < msgs.length ; i++) {
                 messages.push({
-                    msgID: null,
-                    userID: null,
-                    username: msgs[i].senderName,
-                    time: msgs[i].time,
-                    body: msgs[i].body,
+                    msgID: msgs[i].id,
+                    userID: msgs[i].userID, 
+                    username: msgs[i].userName, //TODO fix
+                    time:  msgs[i].time,
+                    body:msgs[i].body
                 })
-            }
+            }       
             this.props.onLoadMessages(messages);
         } else if (actResponsePayload.actionType === "create_dm") {
+            if (actResponsePayload.roomName === null){
+                console.log("invalid roomName received")
+                return
+            } 
             this.props.onNewRoom({
                 id: actResponsePayload.roomID,
-                name: actResponsePayload.roomName,
+                name: actResponsePayload.roomName, //TODO room name
                 hasJoined: true,
                 hasNotification: false,
                 isDM: true,
             })
         } else if (actResponsePayload.actionType === "new_user") {
+            if (actResponsePayload.userID === null){
+                console.log("invalid userID received")
+                return
+            } 
             this.props.onNewUser({
                 username: actResponsePayload.userName,
                 id: actResponsePayload.userID,
-                jwtToken: null
+                jwtToken: ""
             })
         } else if (actResponsePayload.actionType === "new_room") {
+            if (actResponsePayload.roomName === null){
+                console.log("invalid userID received")
+                return
+            }
             this.props.onNewRoom({
                 id: actResponsePayload.roomID,
                 name: actResponsePayload.roomName,
@@ -204,14 +240,31 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     }
 
     changeRoom(nextRoom: Room) {
+        console.log("room changed")
+
+        if (this.props.curRoom===null || this.props.curUser===null){
+            console.log("something is null")
+            console.log(this.props.curRoom, this.props.curUser)
+            return
+        }   
         if (this.props.curRoom && nextRoom.id === this.props.curRoom.id) {
             return
         }
 
-        this.props.onChangeRoom(nextRoom)
-
-        // TODO: send message to server
         // TODO: load next room's messages
+        var actionPayload = {
+            actionType: "change_room",
+            userID: this.props.curUser.id,
+            roomID: this.props.curRoom.id,
+            newRoomID: nextRoom.id,
+            dmUserID: 0,
+            newRoomName: ""
+        }
+
+        this.props.onChangeRoom(nextRoom)
+        console.log("room changed - not null")
+        this.actWebsocket.send(JSON.stringify(actionPayload))
+        //this.actWebsocket.re
     }
 
     joinRoom(nextRoom: Room) {
