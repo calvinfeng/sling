@@ -3,6 +3,7 @@ import { Component } from 'react';
 import { Room, User } from '../types'
 import { Button } from '@material-ui/core'
 import './component.css'
+import curUser from '../reducers/curUser';
 
 type SideBarProps = {
     curUser: User
@@ -61,7 +62,15 @@ class SideBar extends Component<SideBarProps, SideBarState> {
     }
 
     renderUserList = () => {
-        return this.props.users.map((user) =>
+        let dms = this.props.rooms
+            .filter(room => room.isDM)
+            .map(room => this.findDirectMsgName(room.name))
+        
+        // Filter out current user and users with active DMs
+        return this.props.users.filter((user) =>
+            user.username !== this.props.curUser.username &&
+            !dms.includes(user.username)
+        ).map((user) =>
             <li
                 className="SBhoverable SBdmuser"
                 key={user.username}
