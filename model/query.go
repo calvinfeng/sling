@@ -75,6 +75,7 @@ func GetAllMessagesFromRoom(db *gorm.DB, roomID uint) ([]*MessageHistory, error)
 		Select("messages.id, messages.time, messages.body, messages.sender_id, messages.room_id, users.name").
 		Joins("join users on messages.sender_id = users.id").
 		Where("messages.room_id = ?", roomID).
+		Order("messages.id").
 		Rows()
 
 	if err != nil {
