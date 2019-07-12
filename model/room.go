@@ -4,7 +4,7 @@ package model
 type Room struct {
 	ID       uint   `gorm:"column:id"        json:"id"`
 	RoomName string `gorm:"column:name"   json:"name"`
-	Type     int    `gorm:"column:room_type"        json:"room_type"`
+	Type     int    `gorm:"column:room_type"        json:"type"`
 }
 
 // RoomDetail is a model for rooms with user-specific details,

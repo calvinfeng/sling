@@ -70,7 +70,7 @@ func GetRooms(db *gorm.DB, userID uint) ([]*RoomDetail, error) {
 
 // GetAllMessagesFromRoom get all messages for a particular room.
 func GetAllMessagesFromRoom(db *gorm.DB, roomID uint) ([]*MessageHistory, error) {
-	rows, err := db.Debug().Table("messages").
+	rows, err := db.Table("messages").
 		Select("messages.id, messages.time, messages.body, messages.sender_id, messages.room_id, users.name").
 		Joins("join users on messages.sender_id = users.id").
 		Where("messages.room_id = ?", roomID).
