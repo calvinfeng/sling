@@ -295,6 +295,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
         //this.actWebsocket.re
     }
 
+<<<<<<< HEAD
     // joinRoom(nextRoom: Room) {
     //     if (nextRoom.hasJoined) {
     //         return
@@ -326,6 +327,8 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     //     this.props.onJoinRoom(nextRoom)
     // }
 
+=======
+>>>>>>> 26dacdea54605b1b57242af46b6cd30b44dd3dd5
     startDM(user: User) {
         console.log("creating direct message room: ", user)
 
