@@ -242,20 +242,23 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     changeRoom(nextRoom: Room) {
         console.log("room changed")
 
-        if (this.props.curRoom===null || this.props.curUser===null){
-            console.log("something is null")
-            console.log(this.props.curRoom, this.props.curUser)
+        if (this.props.curUser===null){
+            console.log("curUser is null")
             return
-        }   
-        if (this.props.curRoom && nextRoom.id === this.props.curRoom.id) {
-            return
+        }
+        let curRoomID = 0
+        if (this.props.curRoom) {
+            if (nextRoom.id === this.props.curRoom.id) {
+                return
+            }
+            curRoomID = this.props.curRoom.id
         }
 
         // TODO: load next room's messages
         var actionPayload = {
             actionType: "change_room",
             userID: this.props.curUser.id,
-            roomID: this.props.curRoom.id,
+            roomID: curRoomID,
             newRoomID: nextRoom.id,
             dmUserID: 0,
             newRoomName: ""
@@ -272,7 +275,28 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             return
         }
 
-        // TODO: send action to server
+        if (this.props.curUser===null){
+            console.log("curUser is null")
+            return
+        }
+        let curRoomID = 0
+        if (this.props.curRoom) {
+            if (nextRoom.id === this.props.curRoom.id) {
+                return
+            }
+            curRoomID = this.props.curRoom.id
+        }
+
+        var actionPayload = {
+            actionType: "join_room",
+            userID: this.props.curUser.id,
+            roomID: curRoomID,
+            newRoomID: nextRoom.id,
+            dmUserID: 0,
+            newRoomName: ""
+        }
+        console.log("room joined - not null")
+        this.actWebsocket.send(JSON.stringify(actionPayload))
 
         this.props.onJoinRoom(nextRoom)
     }

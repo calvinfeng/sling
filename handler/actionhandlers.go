@@ -16,7 +16,10 @@ import (
 func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 	util.LogInfo("trying to call handleChangeRoom")
 
-	model.UpdateNotificationStatus(mb.db, p.NewRoomID, p.UserID, false)
+	err := model.UpdateNotificationStatus(mb.db, p.NewRoomID, p.UserID, false)
+	if err != nil {
+		util.LogErr("Error updating notification status", err)
+	}
 
 	// update groupByRoomID
 	cli := mb.clientByID[p.UserID]
@@ -73,7 +76,7 @@ func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
 }
 
 func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
-	model.InsertUserroom(mb.db, p.UserID, p.RoomID, false)
+	model.InsertUserroom(mb.db, p.UserID, p.NewRoomID, false)
 	messageHistory, err := model.GetAllMessagesFromRoom(mb.db, p.RoomID)
 	if err != nil {
 		return // TODO: Better error handling
