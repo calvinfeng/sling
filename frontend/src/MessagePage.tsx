@@ -295,40 +295,6 @@ class MessagePage extends React.Component<Props, MessagePageState> {
         //this.actWebsocket.re
     }
 
-<<<<<<< HEAD
-    // joinRoom(nextRoom: Room) {
-    //     if (nextRoom.hasJoined) {
-    //         return
-    //     }
-
-    //     if (this.props.curUser===null){
-    //         console.log("curUser is null")
-    //         return
-    //     }
-    //     let curRoomID = 0
-    //     if (this.props.curRoom) {
-    //         if (nextRoom.id === this.props.curRoom.id) {
-    //             return
-    //         }
-    //         curRoomID = this.props.curRoom.id
-    //     }
-
-    //     var actionPayload = {
-    //         actionType: "join_room",
-    //         userID: this.props.curUser.id,
-    //         roomID: curRoomID,
-    //         newRoomID: nextRoom.id,
-    //         dmUserID: 0,
-    //         newRoomName: ""
-    //     }
-    //     console.log("room joined - not null")
-    //     this.actWebsocket.send(JSON.stringify(actionPayload))
-
-    //     this.props.onJoinRoom(nextRoom)
-    // }
-
-=======
->>>>>>> 26dacdea54605b1b57242af46b6cd30b44dd3dd5
     startDM(user: User) {
         console.log("creating direct message room: ", user)
 
