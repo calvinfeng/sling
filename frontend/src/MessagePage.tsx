@@ -427,7 +427,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                     <div className="inputs">
                         <InputBox
                             sendMessage={(body: String) => this.sendMessage(body)}
-                            enabled={this.state.inputEnabled}
+                            enabled={this.props.curRoom !== null}
                         />
                     </div>
                 </div>
