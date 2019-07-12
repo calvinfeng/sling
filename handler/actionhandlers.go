@@ -41,7 +41,6 @@ func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 }
 
 func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
-	// TODO: DATABASE update usersrooms to mark new room as unread
 	roomID, roomName, err := model.InsertDMRoom(mb.db, p.UserID, p.DMUserID)
 	if err != nil {
 		return // TODO: Better error handling
