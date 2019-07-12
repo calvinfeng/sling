@@ -11,17 +11,11 @@ package handler
 import (
 	"github.com/calvinfeng/sling/model"
 	"github.com/calvinfeng/sling/util"
+	"github.com/jinzhu/gorm"
 )
 
 func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
-	util.LogInfo("trying to call handleChangeRoom")
-
-	err := model.UpdateNotificationStatus(mb.db, p.NewRoomID, p.UserID, false)
-	if err != nil {
-		util.LogErr("Error updating notification status", err)
-	}
-
-	// update groupByRoomID
+	// update group by room id CONSIDER: ordering of this update and the database
 	cli := mb.clientByID[p.UserID]
 	cli.SetRoomID(p.NewRoomID)
 	if mb.groupByRoomID[p.NewRoomID] == nil {
@@ -30,32 +24,34 @@ func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 	delete(mb.groupByRoomID[p.RoomID], p.UserID)
 	mb.groupByRoomID[p.NewRoomID][p.UserID] = cli
 
-	messageHistory, err := model.GetAllMessagesFromRoom(mb.db, p.NewRoomID)
-	if err != nil {
-		return // TODO: Better error handling
-	}
+	go func(db *gorm.DB, p ActionPayload, cli Client) {
+		err := model.UpdateNotificationStatus(db, p.NewRoomID, p.UserID, false)
+		if err != nil {
+			util.LogErr("Error updating notification status", err)
+		}
 
-	responsePayload := ActionResponsePayload{
-		ActionType:     "message_history",
-		MessageHistory: messageHistory,
-	}
+		messageHistory, err := model.GetAllMessagesFromRoom(db, p.NewRoomID)
+		if err != nil {
+			util.LogErr("failure to fetch message history", err)
+			return
+		}
 
-	cli.WriteActionQueue() <- responsePayload
+		responsePayload := ActionResponsePayload{
+			ActionType:     "message_history",
+			MessageHistory: messageHistory,
+		}
+
+		cli.WriteActionQueue() <- responsePayload
+	}(mb.db, p, cli)
 }
 
 func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
+	// create room first
 	roomID, roomName, err := model.InsertDMRoom(mb.db, p.UserID, p.DMUserID)
 	if err != nil {
-		return // TODO: Better error handling
+		util.LogErr("could not insert new dm room", err)
+		return
 	}
-
-	responsePayload := ActionResponsePayload{
-		ActionType: "create_dm",
-		RoomID:     roomID,
-		RoomName:   roomName,
-		UserID:     p.UserID,
-	}
-
 	// update group by RoomID
 	cli := mb.clientByID[p.UserID]
 	if mb.groupByRoomID[roomID] == nil {
@@ -67,27 +63,25 @@ func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
 	cli.SetRoomID(roomID)
 	mb.groupByRoomID[roomID][p.UserID] = cli
 
-	// send new dm response to self to inform frontend to change room
-	cli.WriteActionQueue() <- responsePayload
-
-	// send new dm notification to target user if logged on
-	if cli, ok := mb.clientByID[p.DMUserID]; ok {
-		cli.WriteActionQueue() <- responsePayload
+	reciever, recieverActive := mb.clientByID[p.DMUserID]
+	responsePayload := ActionResponsePayload{
+		ActionType: "create_dm",
+		RoomID:     roomID,
+		RoomName:   roomName,
+		UserID:     p.UserID,
 	}
+
+	go func(responsePayload ActionResponsePayload, sender Client, reciever Client, recieverActive bool) {
+		// send new dm response to self to inform frontend of room name/id
+		sender.WriteActionQueue() <- responsePayload
+		// send new dm notification to target user if logged on
+		if recieverActive {
+			reciever.WriteActionQueue() <- responsePayload
+		}
+	}(responsePayload, cli, reciever, recieverActive)
 }
 
 func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
-	model.InsertUserroom(mb.db, p.UserID, p.NewRoomID, false)
-	messageHistory, err := model.GetAllMessagesFromRoom(mb.db, p.RoomID)
-	if err != nil {
-		return // TODO: Better error handling
-	}
-
-	responsePayload := ActionResponsePayload{
-		ActionType:     "message_history",
-		MessageHistory: messageHistory,
-	}
-
 	// update group by RoomID
 	cli := mb.clientByID[p.UserID]
 	if mb.groupByRoomID[p.NewRoomID] == nil {
@@ -99,39 +93,68 @@ func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
 	cli.SetRoomID(p.NewRoomID)
 	mb.groupByRoomID[p.NewRoomID][p.UserID] = cli
 
-	cli.WriteActionQueue() <- responsePayload
+	go func(db *gorm.DB, p ActionPayload, cli Client) {
+		model.InsertUserroom(db, p.UserID, p.NewRoomID, false)
+		messageHistory, err := model.GetAllMessagesFromRoom(db, p.RoomID)
+		if err != nil {
+			util.LogErr("unable to fetch message history", err)
+			return
+		}
+
+		responsePayload := ActionResponsePayload{
+			ActionType:     "message_history",
+			MessageHistory: messageHistory,
+		}
+
+		cli.WriteActionQueue() <- responsePayload
+	}(mb.db, p, cli)
 }
 
 func (mb *MessageBroker) handleCreateUser(p ActionPayload) {
-	userName := model.GetUserNameByID(mb.db, p.UserID)
-
-	responsePayload := ActionResponsePayload{
-		ActionType: "new_user",
-		UserID:     p.UserID,
-		UserName:   userName,
+	// make a copy of shared map structure
+	clientByIDCopy := make(map[uint]Client)
+	for key, value := range mb.clientByID {
+		clientByIDCopy[key] = value
 	}
+	// handle database updates and channel communication in another routine
+	go func(db *gorm.DB, p ActionPayload, clientByIDCopy map[uint]Client) {
+		userName := model.GetUserNameByID(db, p.UserID)
 
-	// broadcast new user message to all users logged on
-	for _, cli := range mb.clientByID {
-		cli.WriteActionQueue() <- responsePayload
-	}
+		responsePayload := ActionResponsePayload{
+			ActionType: "new_user",
+			UserID:     p.UserID,
+			UserName:   userName,
+		}
+		// broadcast new user message to all users logged on
+		for _, cli := range clientByIDCopy {
+			cli.WriteActionQueue() <- responsePayload
+		}
+	}(mb.db, p, clientByIDCopy)
 }
 
 func (mb *MessageBroker) handleCreateRoom(p ActionPayload) {
-	roomID, err := model.InsertRoom(mb.db, p.NewRoomName, 0)
-	if err != nil {
-		return // TODO: Better error handling
+	// make a copy of shared map structure
+	clientByIDCopy := make(map[uint]Client)
+	for key, value := range mb.clientByID {
+		clientByIDCopy[key] = value
 	}
-	model.InsertUserroom(mb.db, p.UserID, roomID, false)
+	// handle database updates and channel communication in another routine
+	func(db *gorm.DB, p ActionPayload, clientByIDCopy map[uint]Client) {
+		roomID, err := model.InsertRoom(db, p.NewRoomName, 0)
+		if err != nil {
+			return // TODO: Better error handling
+		}
+		model.InsertUserroom(db, p.UserID, roomID, false)
 
-	responsePayload := ActionResponsePayload{
-		ActionType: "new_room",
-		RoomID:     roomID,
-		RoomName:   p.NewRoomName,
-	}
+		responsePayload := ActionResponsePayload{
+			ActionType: "new_room",
+			RoomID:     roomID,
+			RoomName:   p.NewRoomName,
+		}
 
-	// broadcast new user message to all users logged on
-	for _, cli := range mb.clientByID {
-		cli.WriteActionQueue() <- responsePayload
-	}
+		// broadcast new user message to all users logged on
+		for _, cli := range clientByIDCopy {
+			cli.WriteActionQueue() <- responsePayload
+		}
+	}(mb.db, p, clientByIDCopy)
 }
