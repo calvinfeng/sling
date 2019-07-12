@@ -110,8 +110,13 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     }
 
     componentWillUnmount() {
-        this.actWebsocket.close()
-        this.msgWebsocket.close()
+        if (this.actWebsocket) {
+            this.actWebsocket.close()
+        }
+
+        if (this.msgWebsocket) {
+            this.msgWebsocket.close()
+        }
         console.log('component unmounting, closed websockets')
     }
 
@@ -346,7 +351,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
 
         this.actWebsocket.send(JSON.stringify(actionPayload))
     }
-    
+
     joinRoom(nextRoom: Room) {
         if (nextRoom.hasJoined) {
             return
