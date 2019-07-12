@@ -197,7 +197,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                 messages.push({
                     msgID: msgs[i].id,
                     userID: msgs[i].userID,
-                    username: msgs[i].userName, //TODO fix
+                    username: msgs[i].userName,
                     time: new Date(msgs[i].time), //
                     body: msgs[i].body
                 })
@@ -213,7 +213,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             }
             let newRoom = {
                 id: actResponsePayload.roomID,
-                name: actResponsePayload.roomName, //TODO room name
+                name: actResponsePayload.roomName,
                 hasJoined: true,
                 hasNotification: false,
                 isDM: true,
@@ -269,11 +269,8 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             time: (new Date()),
             body: body,
         }
-        console.log(Date.now())
-        console.log(new Date())
 
         this.msgWebsocket.send(JSON.stringify(messagePayload))
-        //TODO: when is my state updated?
     }
 
     changeRoom(nextRoom: Room) {
@@ -298,8 +295,6 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             curRoomID = this.props.curRoom.id
         }
 
-
-        // TODO: load next room's messages
         var actionPayload = {
             actionType: "change_room",
             userID: this.props.curUser.id,
@@ -312,7 +307,6 @@ class MessagePage extends React.Component<Props, MessagePageState> {
         this.props.onChangeRoom(nextRoom)
         console.log("room changed - not null")
         this.actWebsocket.send(JSON.stringify(actionPayload))
-        //this.actWebsocket.re
     }
 
     createRoom(name: string) {
