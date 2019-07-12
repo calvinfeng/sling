@@ -43,7 +43,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     componentDidMount() {
         let token = localStorage.getItem('jwt_token')
         if (!token || token.length === 0) {
-            this.props.setLoggedOut()
+            this.handleLogOut()
         }
 
         // Get current user from token
@@ -90,7 +90,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             console.log(err)
 
             // Force user back to login page
-            this.props.setLoggedOut()
+            this.handleLogOut()
         }).finally(() => {
             console.log(this.state)
             this.setState({ loading: false })
@@ -113,6 +113,11 @@ class MessagePage extends React.Component<Props, MessagePageState> {
         this.actWebsocket.close()
         this.msgWebsocket.close()
         console.log('component unmounting, closed websockets')
+    }
+
+    handleLogOut() {
+        this.props.onLogOut()
+        this.props.setLoggedOut()
     }
 
     handleMsgWebsocketOpen = (ev: Event) => {
@@ -230,7 +235,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                 console.log("invalid userID received")
                 return
             }
-            
+
             this.props.onNewRoom({
                 id: actResponsePayload.roomID,
                 name: actResponsePayload.roomName,
@@ -399,7 +404,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                         users={this.props.users}
 
                         logOut={() => {
-                            this.props.setLoggedOut()
+                            this.handleLogOut()
                             this.actWebsocket.close()
                             this.msgWebsocket.close()
                             console.log('logging out, closed websockets')
