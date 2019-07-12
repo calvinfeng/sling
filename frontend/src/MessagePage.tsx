@@ -196,6 +196,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                 })
                 console.log(`reading time as ${msgs[i].time}`)
             }
+            messages.sort((a, b) => a.time > b.time ? 1 : -1)
             this.props.onLoadMessages(messages);
             this.scrollToBottom();
         } else if (actResponsePayload.actionType === "create_dm") {
