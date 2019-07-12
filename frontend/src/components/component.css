@@ -12,7 +12,7 @@
 .SBmore {
     font-size: 15px;
     margin: 0 1rem;
-    color: #333;
+    color: #666;
     padding: 0.25rem;
     border-radius: 5px;
 }
@@ -28,6 +28,10 @@
     list-style-type: none;
     padding-left: 0;
     margin-bottom: 0.4rem;
+}
+
+.SBlist.normal  {
+    color: #666;
 }
 
 .SBlist > li {
@@ -50,6 +54,7 @@
 }
 
 .SBdmuser {
+    color: #666;
     border-radius: 10px;
 }
 
