@@ -46,6 +46,7 @@ func GetRooms(db *gorm.DB, userID uint) ([]*RoomDetail, error) {
 		ur.user_id IS NOT NULL as inroom, COALESCE(ur.unread, false) as unread`).
 		Table("rooms").
 		Joins("LEFT JOIN ? as ur ON rooms.id = ur.room_id", subquery).
+		Where("ur.user_id IS NOT NULL OR rooms.room_type = B'0'").
 		Rows()
 
 	if gorm.IsRecordNotFoundError(err) {
