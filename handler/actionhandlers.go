@@ -16,7 +16,6 @@ import (
 func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 	util.LogInfo("trying to call handleChangeRoom")
 
-	// DATABASE update usersrooms to have no unread notifications on p.roomId, p.userId
 	model.UpdateNotificationStatus(mb.db, p.NewRoomID, p.UserID, false)
 
 	// update groupByRoomID
@@ -28,9 +27,10 @@ func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 	delete(mb.groupByRoomID[p.RoomID], p.UserID)
 	mb.groupByRoomID[p.NewRoomID][p.UserID] = cli
 
-	// DATABASE fetch list of messages in p.NewRoomID
-	// let messageHistory = list of messages type *model.Message (from dataModel)
-	var messageHistory []*model.Message
+	messageHistory, err := model.GetAllMessagesFromRoom(mb.db, p.NewRoomID)
+	if err != nil {
+		return // TODO: Better error handling
+	}
 
 	responsePayload := ActionResponsePayload{
 		ActionType:     "message_history",
@@ -41,11 +41,7 @@ func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 }
 
 func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
-	// DATABASE update rooms to have new room of type dm with
-	// users p.dmUserID and p.UserID
-	// DATABASE update usersrooms to mark new room as unread
-
-	// return the new roomID and roomName
+	// TODO: DATABASE update usersrooms to mark new room as unread
 	roomID, roomName, err := model.InsertDMRoom(mb.db, p.UserID, p.DMUserID)
 	if err != nil {
 		return // TODO: Better error handling
@@ -78,14 +74,11 @@ func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
 }
 
 func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
-
-	// DATABASE update usersrooms to have room p.newRoomID and
-	// p.userID, read
 	model.InsertUserroom(mb.db, p.UserID, p.RoomID, false)
-
-	// DATABASE fetch list of messages in p.NewRoomID
-	// let MessageHistory = list of messages type *model.Message (from dataModel)
-	var messageHistory []*model.Message
+	messageHistory, err := model.GetAllMessagesFromRoom(mb.db, p.RoomID)
+	if err != nil {
+		return // TODO: Better error handling
+	}
 
 	responsePayload := ActionResponsePayload{
 		ActionType:     "message_history",
@@ -107,9 +100,6 @@ func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
 }
 
 func (mb *MessageBroker) handleCreateUser(p ActionPayload) {
-	// database is already updated from a user user being created
-	// DATABASE
-	// let userName = fetch the user's name from the database
 	userName := model.GetUserNameByID(mb.db, p.UserID)
 
 	responsePayload := ActionResponsePayload{

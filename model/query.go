@@ -3,7 +3,6 @@ package model
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -70,26 +69,25 @@ func GetRooms(db *gorm.DB, userID uint) ([]*RoomDetail, error) {
 }
 
 // GetAllMessagesFromRoom get all messages for a particular room.
-func GetAllMessagesFromRoom(db *gorm.DB, roomID uint) ([]*Message, error) {
-	rows, err := db.Table("messages").
+func GetAllMessagesFromRoom(db *gorm.DB, roomID uint) ([]*MessageHistory, error) {
+	rows, err := db.Debug().Table("messages").
 		Select("messages.id, messages.time, messages.body, messages.sender_id, messages.room_id, users.name").
 		Joins("join users on messages.sender_id = users.id").
 		Where("messages.room_id = ?", roomID).
 		Rows()
 
 	if err != nil {
-		return []*Message{}, err
+		return []*MessageHistory{}, err
 	}
 
-	messages := []*Message{}
+	messages := []*MessageHistory{}
 
 	defer rows.Close()
 	for rows.Next() {
-		message := &Message{}
+		message := &MessageHistory{}
 		err = db.ScanRows(rows, message)
-		fmt.Println(message)
 		if err != nil {
-			return []*Message{}, err
+			return []*MessageHistory{}, err
 		}
 		messages = append(messages, message)
 	}
@@ -146,6 +144,16 @@ func InsertDMRoom(db *gorm.DB, user_id uint, tar_user_id uint) (uint, string, er
 	if err != nil {
 		return 0, "", err
 	}
+
+	// Add both members to the new room
+	if err := InsertUserroom(db, user_id, newRoomID, false); err != nil {
+		return 0, "", err
+	}
+
+	if err := InsertUserroom(db, tar_user_id, newRoomID, false); err != nil {
+		return 0, "", err
+	}
+
 	return newRoomID, newRoomName, nil
 }
 
