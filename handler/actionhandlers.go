@@ -95,7 +95,7 @@ func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
 
 	go func(db *gorm.DB, p ActionPayload, cli Client) {
 		model.InsertUserroom(db, p.UserID, p.NewRoomID, false)
-		messageHistory, err := model.GetAllMessagesFromRoom(db, p.RoomID)
+		messageHistory, err := model.GetAllMessagesFromRoom(db, p.NewRoomID)
 		if err != nil {
 			util.LogErr("unable to fetch message history", err)
 			return
