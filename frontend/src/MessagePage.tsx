@@ -230,7 +230,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             this.props.onNewRoom({
                 id: actResponsePayload.roomID,
                 name: actResponsePayload.roomName,
-                hasJoined: true,
+                hasJoined: false,
                 hasNotification: false,
                 isDM: false,
             })
