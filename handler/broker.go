@@ -113,7 +113,7 @@ func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
 		return
 	}
 	for _, user := range UsersInRoom {
-		model.UpdateNotificationStatus(mb.db, p.RoomID, user.ID, false)
+		model.UpdateNotificationStatus(mb.db, p.RoomID, user.ID, true)
 		belongToRoom[user.ID] = true
 	}
 
