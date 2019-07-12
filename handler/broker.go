@@ -121,13 +121,18 @@ func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
 			return
 		}
 		for _, user := range UsersInRoom {
-			model.UpdateNotificationStatus(mb.db, p.RoomID, user.ID, true)
+			if _, ok := clientsInRoom[user.ID]; !ok {
+				model.UpdateNotificationStatus(mb.db, p.RoomID, user.ID, true)
+			}
 			belongToRoom[user.ID] = true
 		}
+
+		name := model.GetUserNameByID(mb.db, p.UserID)
 
 		// update p to be a notification type
 		message := MessageResponsePayload{
 			MessageType: "new_message",
+			UserName:    name,
 			UserID:      p.UserID,
 			RoomID:      p.RoomID,
 			Time:        p.Time,
