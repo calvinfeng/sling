@@ -219,7 +219,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                 isDM: true,
             }
             this.props.onNewRoom(newRoom)
-            if (this.props.curUser != null && actResponsePayload.userID == this.props.curUser.id) {
+            if (this.props.curUser !== null && actResponsePayload.userID === this.props.curUser.id) {
                 this.props.onChangeRoom(newRoom)
             }
         } else if (actResponsePayload.actionType === "new_user") {
@@ -275,18 +275,12 @@ class MessagePage extends React.Component<Props, MessagePageState> {
 
     changeRoom(nextRoom: Room) {
         console.log("room changed")
-        var old_room_id = 0
-        if (this.props.curRoom !== null && null !== this.props.curRoom.id) {
-            old_room_id = this.props.curRoom.id
-        }
         if (this.props.curUser === null) {
             console.log("change room failed- something is null")
             console.log(this.props.curRoom, this.props.curUser)
             return
         }
-        if (this.props.curRoom && nextRoom.id === this.props.curRoom.id) {
-            return
-        }
+
         let curRoomID = 0
         if (this.props.curRoom) {
             if (nextRoom.id === this.props.curRoom.id) {
@@ -298,7 +292,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
         var actionPayload = {
             actionType: "change_room",
             userID: this.props.curUser.id,
-            roomID: old_room_id,
+            roomID: curRoomID,
             newRoomID: nextRoom.id,
             dmUserID: 0,
             newRoomName: ""
@@ -344,7 +338,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
         var actionPayload = {
             actionType: "create_dm",
             userID: this.props.curUser.id,
-            roomID: this.props.curRoom && this.props.curRoom.id || 0,
+            roomID: this.props.curRoom ? this.props.curRoom.id : 0,
             newRoomID: 0,
             dmUserID: user.id,
             newRoomName: ""
