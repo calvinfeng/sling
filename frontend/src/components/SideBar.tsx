@@ -160,6 +160,7 @@ class SideBar extends Component<SideBarProps, SideBarState> {
                             onClick={() => this.createChannel()}
                             className="SBaddbtn"
                             color="primary"
+                            size="small"
                         >
                             <AddBox />
                         </IconButton>
