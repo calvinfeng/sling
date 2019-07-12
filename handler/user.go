@@ -38,7 +38,7 @@ type (
 )
 
 // NewUserHandler returns a handler that creates a new user.
-func NewUserHandler(db *gorm.DB /*, actions chan ActionPayload*/) echo.HandlerFunc {
+func NewUserHandler(db *gorm.DB) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		user := &model.User{}
@@ -71,7 +71,8 @@ func NewUserHandler(db *gorm.DB /*, actions chan ActionPayload*/) echo.HandlerFu
 
 		user.JWTToken = tokenString
 
-		if err := db.Create(user).Error; err != nil {
+		dbc := db.Create(user).Scan(&user)
+		if dbc.Error != nil {
 			// Handle duplicate index errors
 			if err.(*pq.Error).Code == "23505" {
 				errStr := err.Error()
@@ -87,6 +88,9 @@ func NewUserHandler(db *gorm.DB /*, actions chan ActionPayload*/) echo.HandlerFu
 			}
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
+
+		payload := ActionPayload{UserID: user.ID}
+		broker.handleCreateUser(payload)
 
 		/*actions <- ActionPayload{
 			actionType: "new_user",
