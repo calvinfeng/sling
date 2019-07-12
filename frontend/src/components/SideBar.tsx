@@ -1,7 +1,8 @@
 import * as React from 'react';
 import { Component } from 'react';
 import { Room, User } from '../types'
-import { Button } from '@material-ui/core'
+import { Button, IconButton } from '@material-ui/core'
+import AddBox from '@material-ui/icons/AddBox'
 import './component.css'
 
 type SideBarProps = {
@@ -13,6 +14,7 @@ type SideBarProps = {
     logOut: Function
     changeRoom: Function
     startDM: Function
+    createRoom: Function
     joinRoom: Function
 }
 
@@ -32,8 +34,32 @@ class SideBar extends Component<SideBarProps, SideBarState> {
     }
 
 
-    shouldComponentUpdate(nextProps: SideBarProps): boolean { 
+    shouldComponentUpdate(nextProps: SideBarProps): boolean {
         return true // TODO: proper update logic
+    }
+
+    createChannel() {
+        let name = prompt('Enter a new channel name.')
+        if (name === null) {
+            return
+        }
+        name = name.trim()
+
+        while (!this.validateChannelName(name!)) {
+            name = prompt('Invalid name, try again.')
+            if (name === null) {
+                return
+            }
+            name = name.trim()
+        }
+
+        this.props.createRoom(name)
+    }
+
+    validateChannelName(name: string) {
+        return name.length > 0 &&
+            !name.includes(' ') &&
+            !name.includes('~')
     }
 
     handleDisplayMoreChannel = () => {
@@ -64,7 +90,7 @@ class SideBar extends Component<SideBarProps, SideBarState> {
         let dms = this.props.rooms
             .filter(room => room.isDM)
             .map(room => this.findDirectMsgName(room.name))
-        
+
         // Filter out current user and users with active DMs
         return this.props.users.filter((user) =>
             user.username !== this.props.curUser.username &&
@@ -88,7 +114,7 @@ class SideBar extends Component<SideBarProps, SideBarState> {
             if (isDM) {
                 room.name = this.findDirectMsgName(room.name)
             }
-            
+
             return <li
                 className={`SBhoverable ${this.getClassName(room)}`}
                 key={room.id}
@@ -130,6 +156,13 @@ class SideBar extends Component<SideBarProps, SideBarState> {
                 <div >
                     <div className="SBRooms">
                         <label className="SBlabel">Channels</label>
+                        <IconButton
+                            onClick={() => this.createChannel()}
+                            className="SBaddbtn"
+                            color="primary"
+                        >
+                            <AddBox />
+                        </IconButton>
                         {listItems.length > 0 ?
                             <ul className="SBlist">{listItems}</ul> :
                             <div className="SBnone">None</div>

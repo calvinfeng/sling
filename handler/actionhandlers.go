@@ -9,6 +9,8 @@ Summary: includes all handlers for actions change_room, send_message, create_dm,
 package handler
 
 import (
+	"fmt"
+
 	"github.com/calvinfeng/sling/model"
 	"github.com/calvinfeng/sling/util"
 )
@@ -78,7 +80,7 @@ func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
 
 func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
 	model.InsertUserroom(mb.db, p.UserID, p.NewRoomID, false)
-	messageHistory, err := model.GetAllMessagesFromRoom(mb.db, p.RoomID)
+	messageHistory, err := model.GetAllMessagesFromRoom(mb.db, p.NewRoomID)
 	if err != nil {
 		return // TODO: Better error handling
 	}
@@ -120,6 +122,7 @@ func (mb *MessageBroker) handleCreateUser(p ActionPayload) {
 func (mb *MessageBroker) handleCreateRoom(p ActionPayload) {
 	roomID, err := model.InsertRoom(mb.db, p.NewRoomName, 0)
 	if err != nil {
+		fmt.Println(err)
 		return // TODO: Better error handling
 	}
 	model.InsertUserroom(mb.db, p.UserID, roomID, false)
