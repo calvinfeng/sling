@@ -162,6 +162,7 @@ func (c *WebSocketClient) readMessageLoop(ctx context.Context) {
 		select {
 		case <-ctx.Done(): // read loop is closed
 			util.LogInfo(fmt.Sprintf("client %d has terminated read message loop", c.userID))
+			delete(broker.websocketsByUserID, c.UserID())
 			return
 
 		case bytes := <-c.readMessage: // read bytes detected in channel
@@ -192,6 +193,7 @@ func (c *WebSocketClient) readActionLoop(ctx context.Context) {
 		select {
 		case <-ctx.Done(): // read loop is closed
 			util.LogInfo(fmt.Sprintf("client %d has terminated read action loop", c.userID))
+			delete(broker.websocketsByUserID, c.UserID())
 			return
 
 		case bytes := <-c.readAction: // read bytes detected in channel
