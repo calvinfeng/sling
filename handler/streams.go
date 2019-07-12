@@ -1,6 +1,5 @@
 /*==============================================================================
 stream.go - Websocket Stream Interfaces
-
 Summary: handles websocket connection request for actions and messages. Both
 handlers use a channel list in broker (MessageBroker) to sync and create client.
 ==============================================================================*/
@@ -54,8 +53,10 @@ func GetActionStreamHandler(upgrader *websocket.Upgrader) echo.HandlerFunc {
 		}
 
 		// make host channel for other socket to pass connection to
-		broker.websocketsByUserID[user.ID] = make(chan *websocket.Conn)
-
+		broker.mux.Lock()
+		ch := make(chan *websocket.Conn)
+		broker.websocketsByUserID[user.ID] = ch
+		broker.mux.Unlock()
 		// send actionConn along this channel
 		broker.websocketsByUserID[user.ID] <- actionConn
 
@@ -143,7 +144,10 @@ func getActionConn(userID uint) *websocket.Conn {
 	// TODO: set a timeout
 	for {
 		// wait for this users channel to be created
+		broker.mux.Lock()
 		ch, ok := broker.websocketsByUserID[userID]
+		broker.mux.Unlock()
+
 		if ok {
 			// wait for the connection information to be sent
 			for {
