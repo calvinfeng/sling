@@ -230,10 +230,11 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                 console.log("invalid userID received")
                 return
             }
+            
             this.props.onNewRoom({
                 id: actResponsePayload.roomID,
                 name: actResponsePayload.roomName,
-                hasJoined: false,
+                hasJoined: actResponsePayload.userID === this.props.curUser!.id,
                 hasNotification: false,
                 isDM: false,
             })
