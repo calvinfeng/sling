@@ -145,6 +145,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                 time: new Date(msgResponsePayload.time),
                 body: msgResponsePayload.body,
             });
+            this.scrollToBottom();
         } else if (msgResponsePayload.messageType === "notification") {
             this.props.onMarkUnread(msgResponsePayload.roomID);
         } else {
@@ -196,6 +197,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                 console.log(`reading time as ${msgs[i].time}`)
             }
             this.props.onLoadMessages(messages);
+            this.scrollToBottom();
         } else if (actResponsePayload.actionType === "create_dm") {
             if (actResponsePayload.roomName === null) {
                 console.log("invalid roomName received")
