@@ -9,11 +9,12 @@ package handler
 
 import (
 	"context"
+	"sync"
+
 	"github.com/calvinfeng/sling/model"
 	"github.com/calvinfeng/sling/util"
 	"github.com/gorilla/websocket"
 	"github.com/jinzhu/gorm"
-	"sync"
 	// "github.com/labstack/echo/v4"
 	// _ "github.com/labstack/echo/v4/middleware"
 )
@@ -120,7 +121,7 @@ func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
 			return
 		}
 		for _, user := range UsersInRoom {
-			model.UpdateNotificationStatus(mb.db, p.RoomID, user.ID, false)
+			model.UpdateNotificationStatus(mb.db, p.RoomID, user.ID, true)
 			belongToRoom[user.ID] = true
 		}
 

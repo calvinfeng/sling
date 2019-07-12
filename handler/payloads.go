@@ -7,8 +7,9 @@ the MessageBroker and WebsocketClient s
 package handler
 
 import (
-	"github.com/calvinfeng/sling/model"
 	"time"
+
+	"github.com/calvinfeng/sling/model"
 )
 
 /************* Client to MessageBroker payload Types ******************/
@@ -39,6 +40,7 @@ type ActionPayload struct {
 // message broker to users logged on
 type MessageResponsePayload struct {
 	MessageType string    `json:"messageType"`
+	UserName    string    `json:"userName"`
 	UserID      uint      `json:"userID"`
 	RoomID      uint      `json:"roomID"`
 	Time        time.Time `json:"time"`
