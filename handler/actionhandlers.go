@@ -30,9 +30,11 @@ func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 	delete(mb.groupByRoomID[p.RoomID], p.UserID)
 	mb.groupByRoomID[p.NewRoomID][p.UserID] = cli
 
+	// DATABASE fetch list of messages in p.NewRoomID
+	// let messageHistory = list of messages type *model.Message (from dataModel)
 	messageHistory, err := model.GetAllMessagesFromRoom(mb.db, p.NewRoomID)
 	if err != nil {
-		return // TODO: Better error handling
+		util.LogErr("Error in fetching message history", err)
 	}
 
 	responsePayload := ActionResponsePayload{
@@ -77,11 +79,16 @@ func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
 }
 
 func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
+	// DATABASE update usersrooms to have room p.newRoomID and
+	// p.userID, read
 	model.InsertUserroom(mb.db, p.UserID, p.NewRoomID, false)
-	messageHistory, err := model.GetAllMessagesFromRoom(mb.db, p.RoomID)
+
+	// DATABASE fetch list of messages in p.NewRoomID
+	// let MessageHistory = list of messages type *model.Message (from dataModel)
+	messageHistory, err := model.GetAllMessagesFromRoom(mb.db, p.NewRoomID)
 	if err != nil {
-		return // TODO: Better error handling
-	}
+		util.LogErr("Error in fetching message history", err)
+  }
 
 	responsePayload := ActionResponsePayload{
 		ActionType:     "message_history",
