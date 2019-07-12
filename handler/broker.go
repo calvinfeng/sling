@@ -69,7 +69,7 @@ func (mb *MessageBroker) loop() {
 		case c := <-mb.removeClient:
 			mb.handleRemoveClient(c)
 		case b := <-mb.sendMessage:
-			go mb.handleSendMessage(b)
+			mb.handleSendMessage(b)
 		case b := <-mb.sendAction:
 			mb.handleSendAction(b)
 		}
@@ -84,7 +84,7 @@ func (mb *MessageBroker) handleRemoveClient(c Client) {
 	if c.RoomID() != 0 {
 		delete(mb.groupByRoomID[c.RoomID()], c.UserID())
 	}
-	// TODO: ensure empty maps are deleted for memory saving?
+	// CONSIDER: ensure empty maps are deleted for memory saving?
 }
 
 // handleAddClient : creates client & child contexts, adds to broker structures
@@ -92,7 +92,6 @@ func (mb *MessageBroker) handleAddClient(c Client) {
 	ctx, cancel := context.WithCancel(mb.ctx) // TODO : should I keep this as context.WithCancel?
 	mb.clientByID[c.UserID()] = c
 	mb.cancelByID[c.UserID()] = cancel
-
 	c.SetSendMessage(mb.sendMessage)
 	c.SetSendAction(mb.sendAction)
 	c.Activate(ctx)
@@ -101,58 +100,62 @@ func (mb *MessageBroker) handleAddClient(c Client) {
 // handleSendMessage : updates database, sends messages and notifications to
 // clients when the broker recieves a new message
 func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
-	// DATABASE add message mb to database
-	model.InsertMessage(mb.db, p.Time, p.Body, p.UserID, p.RoomID)
-
-	// DATABASE for all users in room p.roomId,
-	// whose Ids are not in mb.groupByRoomID[p.roomID], update to unread
-	belongToRoom := make(map[uint]bool)
-	UsersInRoom, err := model.GetUsersInARoom(mb.db, p.RoomID)
-	if err != nil {
-		util.LogErr("users in room fetch err", err)
-		return
+	// make a copy of shared data
+	clientsInRoom := make(map[uint]Client)
+	clientsConnected := make(map[uint]Client)
+	for key, value := range mb.groupByRoomID[p.RoomID] {
+		clientsInRoom[key] = value
 	}
-	for _, user := range UsersInRoom {
-		model.UpdateNotificationStatus(mb.db, p.RoomID, user.ID, true)
-		belongToRoom[user.ID] = true
+	for key, value := range mb.clientByID {
+		clientsConnected[key] = value
 	}
 
-	name := model.GetUserNameByID(mb.db, p.UserID)
+	// go routine to handle lag of network calls and database calls
+	go func(clientsConnected map[uint]Client, clientsInRoom map[uint]Client) {
+		belongToRoom := make(map[uint]bool)
 
-	// update p to be a notification type
-	message := MessageResponsePayload{
-		MessageType: "new_message",
-		UserName:    name,
-		UserID:      p.UserID,
-		RoomID:      p.RoomID,
-		Time:        p.Time,
-		Body:        p.Body,
-	}
-
-	// send live messages to clients logged into this room
-	for _, cli := range mb.groupByRoomID[p.RoomID] {
-		select {
-		case cli.WriteMessageQueue() <- message:
-		default:
+		model.InsertMessage(mb.db, p.Time, p.Body, p.UserID, p.RoomID)
+		UsersInRoom, err := model.GetUsersInARoom(mb.db, p.RoomID)
+		if err != nil {
+			util.LogErr("users in room fetch err", err)
+			return
 		}
-		belongToRoom[cli.UserID()] = false
-	}
+		for _, user := range UsersInRoom {
+			model.UpdateNotificationStatus(mb.db, p.RoomID, user.ID, true)
+			belongToRoom[user.ID] = true
+		}
 
-	// update p to be a notification type
-	notification := MessageResponsePayload{
-		MessageType: "notification",
-		RoomID:      p.RoomID,
-	}
-
-	// send live notifications to logged in clients who belong to this room
-	for userID, active := range belongToRoom {
-		if cli, ok := mb.clientByID[userID]; ok && active {
+		// update p to be a notification type
+		message := MessageResponsePayload{
+			MessageType: "new_message",
+			UserID:      p.UserID,
+			RoomID:      p.RoomID,
+			Time:        p.Time,
+			Body:        p.Body,
+		}
+		// send live messages to clients logged into this room
+		for _, cli := range clientsInRoom {
 			select {
-			case cli.WriteMessageQueue() <- notification:
+			case cli.WriteMessageQueue() <- message:
 			default:
 			}
+			belongToRoom[cli.UserID()] = false
 		}
-	}
+		// update p to be a notification type
+		notification := MessageResponsePayload{
+			MessageType: "notification",
+			RoomID:      p.RoomID,
+		}
+		// send live notifications to logged in clients who belong to this room
+		for userID, active := range belongToRoom {
+			if cli, ok := clientsConnected[userID]; ok && active {
+				select {
+				case cli.WriteMessageQueue() <- notification:
+				default:
+				}
+			}
+		}
+	}(clientsConnected, clientsInRoom)
 }
 
 // handleSendAction : checks action type, spawns appropriate goroutine handler
@@ -160,14 +163,14 @@ func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
 func (mb *MessageBroker) handleSendAction(p ActionPayload) {
 	switch p.ActionType {
 	case "change_room":
-		go mb.handleChangeRoom(p)
+		mb.handleChangeRoom(p)
 	case "create_dm":
-		go mb.handleCreateDm(p)
+		mb.handleCreateDm(p)
 	case "join_room":
-		go mb.handleJoinRoom(p)
+		mb.handleJoinRoom(p)
 	case "create_user":
-		go mb.handleCreateUser(p)
+		mb.handleCreateUser(p)
 	case "create_room":
-		go mb.handleCreateRoom(p)
+		mb.handleCreateRoom(p)
 	}
 }
