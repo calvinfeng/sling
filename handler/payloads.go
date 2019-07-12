@@ -8,7 +8,6 @@ package handler
 
 import (
 	"github.com/calvinfeng/sling/model"
-	"time"
 )
 
 /************* Client to MessageBroker payload Types ******************/
@@ -16,10 +15,10 @@ import (
 // MessagePayload holds the message content to be communicated from the
 // client frontend, to the server and message broker
 type MessagePayload struct {
-	UserID uint      `json:"userID"`
-	RoomID uint      `json:"roomID"`
-	Time   time.Time `json:"time"`
-	Body   string    `json:"body"`
+	UserID uint   `json:"userID"`
+	RoomID uint   `json:"roomID"`
+	Time   string `json:"time"`
+	Body   string `json:"body"`
 }
 
 // ActionPayload holds the action content to be communicated from the
@@ -38,11 +37,11 @@ type ActionPayload struct {
 // MessageResponsePayload holds the message content to be communicated from the
 // message broker to users logged on
 type MessageResponsePayload struct {
-	MessageType string    `json:"messageType"`
-	UserID      uint      `json:"userID"`
-	RoomID      uint      `json:"roomID"`
-	Time        time.Time `json:"time"`
-	Body        string    `json:"body"`
+	MessageType string `json:"messageType"`
+	UserID      uint   `json:"userID"`
+	RoomID      uint   `json:"roomID"`
+	Time        string `json:"time"`
+	Body        string `json:"body"`
 }
 
 // ActionResponsePayload holds the message content to be communicated from the
