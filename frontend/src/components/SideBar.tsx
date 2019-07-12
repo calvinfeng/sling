@@ -3,7 +3,6 @@ import { Component } from 'react';
 import { Room, User } from '../types'
 import { Button } from '@material-ui/core'
 import './component.css'
-import curUser from '../reducers/curUser';
 
 type SideBarProps = {
     curUser: User
@@ -33,8 +32,8 @@ class SideBar extends Component<SideBarProps, SideBarState> {
     }
 
 
-    shouldComponentUpdate(nextProps: SideBarProps): boolean {
-        return true
+    shouldComponentUpdate(nextProps: SideBarProps): boolean { 
+        return true // TODO: proper update logic
     }
 
     handleDisplayMoreChannel = () => {
@@ -85,8 +84,12 @@ class SideBar extends Component<SideBarProps, SideBarState> {
         return this.props.rooms.filter((room): boolean =>
             room.hasJoined === hasJoined &&
             room.isDM === isDM
-        ).map((room) =>
-            <li
+        ).map((room) => {
+            if (isDM) {
+                room.name = this.findDirectMsgName(room.name)
+            }
+            
+            return <li
                 className={`SBhoverable ${this.getClassName(room)}`}
                 key={room.id}
                 onClick={hasJoined ?
@@ -96,7 +99,7 @@ class SideBar extends Component<SideBarProps, SideBarState> {
             >
                 {room.name}
             </li>
-        );
+        });
     }
 
     render() {
