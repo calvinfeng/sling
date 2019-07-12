@@ -30,7 +30,11 @@ class DisplayWindow extends Component<DisplayWindowProps, DisplayWindowState> {
                 {this.props.curRoom ?
                     <div>
                         <div className="DWlabel">
-                            <label>#{this.props.curRoom.name}</label>
+                            <label>{
+                                (this.props.curRoom.isDM ?
+                                    'Direct message with ' :
+                                    '#') + this.props.curRoom.name
+                            }</label>
                         </div>
                         <div className="DWmessages">
                             {displayMessages}

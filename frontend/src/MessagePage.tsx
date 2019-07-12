@@ -113,6 +113,12 @@ class MessagePage extends React.Component<Props, MessagePageState> {
         })
     }
 
+    componentWillUnmount() {
+        this.actWebsocket.close()
+        this.msgWebsocket.close()
+        console.log('component unmounting, closed websockets')
+    }
+
     handleMsgWebsocketOpen = (ev: Event) => {
         if (this.props.curUser != null) {
             var token = this.props.curUser.jwtToken
