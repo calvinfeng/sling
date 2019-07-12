@@ -17,7 +17,7 @@ type DisplayWindowState = {
 class DisplayWindow extends Component<DisplayWindowProps, DisplayWindowState> {
     render() {
         const displayMessages = this.props.messages.map((msg) =>
-            <div key={msg.time.toISOString()} className="DWmessage">
+            <div key={msg.username + msg.time} className="DWmessage">
                 <div>
                     <span className="DWusername">{msg.username} </span>
                     <span className="DWtime">{moment(msg.time).fromNow()}</span>

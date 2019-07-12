@@ -16,8 +16,10 @@ import (
 func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 	util.LogInfo("trying to call handleChangeRoom")
 
-	// DATABASE update usersrooms to have no unread notifications on p.roomId, p.userId
-	model.UpdateNotificationStatus(mb.db, p.NewRoomID, p.UserID, false)
+	err := model.UpdateNotificationStatus(mb.db, p.NewRoomID, p.UserID, false)
+	if err != nil {
+		util.LogErr("Error updating notification status", err)
+	}
 
 	// update groupByRoomID
 	cli := mb.clientByID[p.UserID]
@@ -44,23 +46,16 @@ func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 }
 
 func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
-	// DATABASE update rooms to have new room of type dm with
-	// users p.dmUserID and p.UserID
-	// DATABASE update usersrooms to mark new room as unread
-
-	// return the new roomID and roomName
 	roomID, roomName, err := model.InsertDMRoom(mb.db, p.UserID, p.DMUserID)
 	if err != nil {
 		return // TODO: Better error handling
 	}
 
-	model.InsertUserroom(mb.db, p.UserID, roomID, false)
-	model.InsertUserroom(mb.db, p.DMUserID, roomID, true)
-
 	responsePayload := ActionResponsePayload{
 		ActionType: "create_dm",
 		RoomID:     roomID,
 		RoomName:   roomName,
+		UserID:     p.UserID,
 	}
 
 	// update group by RoomID
@@ -74,17 +69,18 @@ func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
 	cli.SetRoomID(roomID)
 	mb.groupByRoomID[roomID][p.UserID] = cli
 
-	// send new dm notification to users logged on
+	// send new dm response to self to inform frontend to change room
+	cli.WriteActionQueue() <- responsePayload
+
+	// send new dm notification to target user if logged on
 	if cli, ok := mb.clientByID[p.DMUserID]; ok {
 		cli.WriteActionQueue() <- responsePayload
 	}
 }
 
 func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
-
 	// DATABASE update usersrooms to have room p.newRoomID and
 	// p.userID, read
-	util.LogInfo("joiningn this room")
 	model.InsertUserroom(mb.db, p.UserID, p.NewRoomID, false)
 
 	// DATABASE fetch list of messages in p.NewRoomID
@@ -92,7 +88,7 @@ func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
 	messageHistory, err := model.GetAllMessagesFromRoom(mb.db, p.NewRoomID)
 	if err != nil {
 		util.LogErr("Error in fetching message history", err)
-	}
+  }
 
 	responsePayload := ActionResponsePayload{
 		ActionType:     "message_history",
@@ -114,9 +110,6 @@ func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
 }
 
 func (mb *MessageBroker) handleCreateUser(p ActionPayload) {
-	// database is already updated from a user user being created
-	// DATABASE
-	// let userName = fetch the user's name from the database
 	userName := model.GetUserNameByID(mb.db, p.UserID)
 
 	responsePayload := ActionResponsePayload{

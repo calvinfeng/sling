@@ -16,7 +16,7 @@ import (
 
 //GetUsersInARoom : get all users for a particular room.
 func GetUsersInARoom(db *gorm.DB, roomID uint) ([]*User, error) {
-	rows, err := db.Debug().Select("users.id, users.name").
+	rows, err := db.Select("users.id, users.name").
 		Table("users").
 		Joins("LEFT JOIN usersrooms ON users.id = usersrooms.user_id").
 		Where("usersrooms.room_id = ?", roomID).Rows()
@@ -44,10 +44,11 @@ func GetUsersInARoom(db *gorm.DB, roomID uint) ([]*User, error) {
 func GetRooms(db *gorm.DB, userID uint) ([]*RoomDetail, error) {
 	rooms := []*RoomDetail{}
 	subquery := db.Select("usersrooms.*").Table("usersrooms").Where("user_id = ?", userID).SubQuery()
-	rows, err := db.Debug().Select(`rooms.id, rooms.name, rooms.room_type,
+	rows, err := db.Select(`rooms.id, rooms.name, rooms.room_type,
 		ur.user_id IS NOT NULL as inroom, COALESCE(ur.unread, false) as unread`).
 		Table("rooms").
 		Joins("LEFT JOIN ? as ur ON rooms.id = ur.room_id", subquery).
+		Where("ur.user_id IS NOT NULL OR rooms.room_type = B'0'").
 		Rows()
 
 	if gorm.IsRecordNotFoundError(err) {
@@ -71,26 +72,25 @@ func GetRooms(db *gorm.DB, userID uint) ([]*RoomDetail, error) {
 }
 
 // GetAllMessagesFromRoom get all messages for a particular room.
-func GetAllMessagesFromRoom(db *gorm.DB, roomID uint) ([]*Message, error) {
-	rows, err := db.Debug().Table("messages").
+func GetAllMessagesFromRoom(db *gorm.DB, roomID uint) ([]*MessageHistory, error) {
+	rows, err := db.Table("messages").
 		Select("messages.id, messages.time, messages.body, messages.sender_id, messages.room_id, users.name").
 		Joins("join users on messages.sender_id = users.id").
 		Where("messages.room_id = ?", roomID).
 		Rows()
 
 	if err != nil {
-		return []*Message{}, err
+		return []*MessageHistory{}, err
 	}
 
-	messages := []*Message{}
+	messages := []*MessageHistory{}
 
 	defer rows.Close()
 	for rows.Next() {
-		message := &Message{}
+		message := &MessageHistory{}
 		err = db.ScanRows(rows, message)
-		fmt.Println(message)
 		if err != nil {
-			return []*Message{}, err
+			return []*MessageHistory{}, err
 		}
 		messages = append(messages, message)
 	}
@@ -147,6 +147,16 @@ func InsertDMRoom(db *gorm.DB, user_id uint, tar_user_id uint) (uint, string, er
 	if err != nil {
 		return 0, "", err
 	}
+
+	// Add both members to the new room
+	if err := InsertUserroom(db, user_id, newRoomID, false); err != nil {
+		return 0, "", err
+	}
+
+	if err := InsertUserroom(db, tar_user_id, newRoomID, false); err != nil {
+		return 0, "", err
+	}
+
 	return newRoomID, newRoomName, nil
 }
 
