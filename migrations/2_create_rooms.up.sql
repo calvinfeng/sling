@@ -5,4 +5,3 @@ CREATE TABLE rooms (
 );
 
 CREATE UNIQUE INDEX ON rooms(id);
-CREATE UNIQUE INDEX ON rooms(name);
