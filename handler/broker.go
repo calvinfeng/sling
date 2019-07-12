@@ -15,8 +15,6 @@ import (
 	"github.com/calvinfeng/sling/util"
 	"github.com/gorilla/websocket"
 	"github.com/jinzhu/gorm"
-	// "github.com/labstack/echo/v4"
-	// _ "github.com/labstack/echo/v4/middleware"
 )
 
 // MessageBroker is a central hub that broadcasts all messages and actions,

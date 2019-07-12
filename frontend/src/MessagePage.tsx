@@ -133,6 +133,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
 
     handleMsgWebsocketClose = (ev: CloseEvent) => {
         this.setState({ connectedToMsgSocket: false, });
+        alert("Server has Disconnected")
     }
 
     handleMsgWebsocketMessage = (mev: MessageEvent) => {
@@ -175,6 +176,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
 
     handleActWebsocketClose = (ev: CloseEvent) => {
         this.setState({ connectedToActSocket: false, });
+        alert("Server has disconnected")
     }
 
     handleActWebsocketError = (ev: Event) => {
@@ -255,7 +257,6 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             return
         }
 
-        //this.setState({ inputEnabled: false }) // TODO: why?
         if (this.props.curRoom == null || this.props.curRoom.id === null ||
             this.props.curUser === null || this.props.curUser.id === null) {
             console.log("invalid message sent, with null input")
