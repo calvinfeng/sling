@@ -198,13 +198,17 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                 console.log("invalid roomName received")
                 return
             } 
-            this.props.onNewRoom({
+            let newRoom = {
                 id: actResponsePayload.roomID,
                 name: actResponsePayload.roomName, //TODO room name
                 hasJoined: true,
                 hasNotification: false,
                 isDM: true,
-            })
+            }
+            this.props.onNewRoom(newRoom)
+            if (this.props.curUser != null && actResponsePayload.userID == this.props.curUser.id) {
+                this.props.onChangeRoom(newRoom)
+            }
         } else if (actResponsePayload.actionType === "new_user") {
             if (actResponsePayload.userID === null){
                 console.log("invalid userID received")
@@ -302,9 +306,27 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     }
 
     startDM(user: User) {
-        console.log(user)
+        console.log("creating direct message room: ", user)
 
-        // TODO: send action to server
+        if (this.props.curUser===null){
+            console.log("curUser is null")
+            return
+        }
+        if (user.id === null) {
+            console.log("target user id is null")
+            return
+        }
+
+        var actionPayload = {
+            actionType: "create_dm",
+            userID: this.props.curUser.id,
+            roomID: this.props.curRoom && this.props.curRoom.id || 0,
+            newRoomID: 0,
+            dmUserID: user.id,
+            newRoomName: ""
+        }
+
+        this.actWebsocket.send(JSON.stringify(actionPayload))
     }
 
     scrollToBottom = () => {

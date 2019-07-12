@@ -49,13 +49,11 @@ func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
 		return // TODO: Better error handling
 	}
 
-	model.InsertUserroom(mb.db, p.UserID, roomID, false)
-	model.InsertUserroom(mb.db, p.DMUserID, roomID, true)
-
 	responsePayload := ActionResponsePayload{
 		ActionType: "create_dm",
 		RoomID:     roomID,
 		RoomName:   roomName,
+		UserID:     p.UserID,
 	}
 
 	// update group by RoomID
@@ -69,7 +67,10 @@ func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
 	cli.SetRoomID(roomID)
 	mb.groupByRoomID[roomID][p.UserID] = cli
 
-	// send new dm notification to users logged on
+	// send new dm response to self to inform frontend to change room
+	cli.WriteActionQueue() <- responsePayload
+
+	// send new dm notification to target user if logged on
 	if cli, ok := mb.clientByID[p.DMUserID]; ok {
 		cli.WriteActionQueue() <- responsePayload
 	}
