@@ -3,15 +3,17 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"io"
+	"net/http"
+	"os"
+
 	"github.com/calvinfeng/sling/handler"
 	"github.com/gorilla/websocket"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	"github.com/spf13/cobra"
-	"io"
-	"net/http"
-	"os"
+
 	// Postgres database driver
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 )
@@ -46,8 +48,8 @@ func runServer(cmd *cobra.Command, args []string) error {
 	// srv.File("/", "public/index.html")
 	// srv.Static("/assets", "public/assets")
 
-	srv.File("/", "frontend/build/index.html")
-	srv.Static("/static", "frontend/build/static")
+	srv.File("/", "./frontend/build/index.html")
+	srv.Static("/static", "./frontend/build/static")
 
 	srv.POST("/api/register", handler.NewUserHandler(conn))
 	srv.POST("/api/login", handler.LoginHandler(conn))

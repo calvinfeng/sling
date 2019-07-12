@@ -10,11 +10,11 @@ package handler
 
 import (
 	"context"
-	"github.com/calvinfeng/sling/model"
+
+	// "github.com/calvinfeng/sling/model"
 	"github.com/calvinfeng/sling/util"
 	"github.com/gorilla/websocket"
 	"github.com/jinzhu/gorm"
-	"sync"
 	// "github.com/labstack/echo/v4"
 	// _ "github.com/labstack/echo/v4/middleware"
 )
@@ -32,7 +32,6 @@ type MessageBroker struct {
 	sendAction         chan ActionPayload
 	groupByRoomID      map[uint]map[uint]Client
 	websocketsByUserID map[uint]chan *websocket.Conn
-	mux                *sync.Mutex
 }
 
 var broker *MessageBroker
@@ -51,7 +50,6 @@ func RunBroker(ctx context.Context, db *gorm.DB) {
 		sendAction:         make(chan ActionPayload),
 		groupByRoomID:      make(map[uint]map[uint]Client),
 		websocketsByUserID: make(map[uint]chan *websocket.Conn),
-		mux:                &sync.Mutex{},
 	}
 
 	go broker.loop()
@@ -93,6 +91,11 @@ func (mb *MessageBroker) handleAddClient(c Client) {
 	mb.clientByID[c.UserID()] = c
 	mb.cancelByID[c.UserID()] = cancel
 
+	// if mb.groupByRoomID[c.RoomID()] == nil {
+	// 	mb.groupByRoomID[c.RoomID()] = make(map[uint]Client)
+	// }
+	// mb.groupByRoomID[c.RoomID()][c.ID()] = c
+
 	c.SetSendMessage(mb.sendMessage)
 	c.SetSendAction(mb.sendAction)
 	c.Activate(ctx)
@@ -101,23 +104,15 @@ func (mb *MessageBroker) handleAddClient(c Client) {
 // handleSendMessage : updates database, sends messages and notifications to
 // clients when the broker recieves a new message
 func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
+	// update database: TODO waiting for database implementations
 
 	// DATABASE add message mb to database
 
-	model.InsertMessage(mb.db, p.Time, p.Body, p.UserID, p.RoomID)
-
-	belongToRoom := make(map[uint]bool)
 	// DATABASE for all users in room p.roomId,
 	// whose Ids are not in mb.groupByRoomID[p.roomID], update to unread
-	UsersInRoom, err := model.GetUsersInARoom(mb.db, p.RoomID)
-	if err != nil {
-		util.LogErr("users in room fetch err", err)
-		return
-	}
-	for _, user := range UsersInRoom {
-		model.UpdateNotificationStatus(mb.db, p.RoomID, user.ID, false)
-		belongToRoom[user.ID] = true
-	}
+
+	// Let belongToRoom = map of user_ids to booleans that belong to p.roomID DATABASE
+	belongToRoom := make(map[uint]bool)
 
 	// update p to be a notification type
 	message := MessageResponsePayload{
