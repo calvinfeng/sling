@@ -20,7 +20,7 @@ type MessagePageState = {
 }
 
 const initialState: MessagePageState = {
-    inputEnabled: false, // don't enable until messages successfully fetched
+    inputEnabled: true, // don't enable until messages successfully fetched
     error: '',
     loading: true,
     connectedToMsgSocket: false,
@@ -94,13 +94,9 @@ class MessagePage extends React.Component<Props, MessagePageState> {
         }).finally(() => {
             console.log(this.state)
             this.setState({ loading: false })
-            console.log("before sockets")
-
             // // Set up websocket handlers
             this.msgWebsocket = new WebSocket("ws://localhost:8888/api/stream/messages")
             this.actWebsocket = new WebSocket("ws://localhost:8888/api/stream/actions")
-            console.log("after sockets")
-            console.log("after send")
  
             this.msgWebsocket.onopen = this.handleMsgWebsocketOpen
             this.msgWebsocket.onclose = this.handleMsgWebsocketClose
@@ -140,7 +136,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                 msgID: msgResponsePayload.userID, // TODO make a real messageID
                 userID: msgResponsePayload.userID,
                 username: msgResponsePayload.userID, // TODO make username
-                time: msgResponsePayload.time,
+                time: new Date(msgResponsePayload.time),
                 body: msgResponsePayload.body,
             });
         } else if (msgResponsePayload.messageType === "notification"){
@@ -188,9 +184,10 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                     msgID: msgs[i].id,
                     userID: msgs[i].userID, 
                     username: msgs[i].userName, //TODO fix
-                    time:  msgs[i].time,
+                    time:  new Date(msgs[i].time), //
                     body:msgs[i].body
                 })
+                console.log(`reading time as ${msgs[i].time}`)
             }       
             this.props.onLoadMessages(messages);
         } else if (actResponsePayload.actionType === "create_dm") {
@@ -239,15 +236,38 @@ class MessagePage extends React.Component<Props, MessagePageState> {
 
     sendMessage(body: String) {
         console.log(`sending ${body}`)
-        // TODO: send message to server
-        this.setState({ inputEnabled: false })
+        //this.setState({ inputEnabled: false }) // TODO: why?
+        if (this.props.curRoom == null || this.props.curRoom.id === null || 
+            this.props.curUser === null ||  this.props.curUser.id === null ){
+                console.log("invalid message sent, with null input")
+                return 
+            }
+        var messagePayload = {
+            messageType: "message",
+            userID: this.props.curUser.id,
+            roomID: this.props.curRoom.id,
+            time: (new Date()),
+            body: body,
+        }
+        console.log(Date.now())
+        console.log(new Date())
+    
+        this.msgWebsocket.send(JSON.stringify(messagePayload))
+        //TODO: when is my state updated?
     }
 
     changeRoom(nextRoom: Room) {
         console.log("room changed")
-
+        var old_room_id = 0
+        if (this.props.curRoom!==null && null !== this.props.curRoom.id) {
+            old_room_id = this.props.curRoom.id
+        }
         if (this.props.curUser===null){
-            console.log("curUser is null")
+            console.log("change room failed- something is null")
+            console.log(this.props.curRoom, this.props.curUser)
+            return
+        }   
+        if (this.props.curRoom && nextRoom.id === this.props.curRoom.id) {
             return
         }
         let curRoomID = 0
@@ -258,11 +278,12 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             curRoomID = this.props.curRoom.id
         }
 
+
         // TODO: load next room's messages
         var actionPayload = {
             actionType: "change_room",
             userID: this.props.curUser.id,
-            roomID: curRoomID,
+            roomID: old_room_id,
             newRoomID: nextRoom.id,
             dmUserID: 0,
             newRoomName: ""
@@ -272,37 +293,6 @@ class MessagePage extends React.Component<Props, MessagePageState> {
         console.log("room changed - not null")
         this.actWebsocket.send(JSON.stringify(actionPayload))
         //this.actWebsocket.re
-    }
-
-    joinRoom(nextRoom: Room) {
-        if (nextRoom.hasJoined) {
-            return
-        }
-
-        if (this.props.curUser===null){
-            console.log("curUser is null")
-            return
-        }
-        let curRoomID = 0
-        if (this.props.curRoom) {
-            if (nextRoom.id === this.props.curRoom.id) {
-                return
-            }
-            curRoomID = this.props.curRoom.id
-        }
-
-        var actionPayload = {
-            actionType: "join_room",
-            userID: this.props.curUser.id,
-            roomID: curRoomID,
-            newRoomID: nextRoom.id,
-            dmUserID: 0,
-            newRoomName: ""
-        }
-        console.log("room joined - not null")
-        this.actWebsocket.send(JSON.stringify(actionPayload))
-
-        this.props.onJoinRoom(nextRoom)
     }
 
     startDM(user: User) {
@@ -326,6 +316,30 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             newRoomName: ""
         }
 
+        this.actWebsocket.send(JSON.stringify(actionPayload))
+    }
+
+    joinRoom(room: Room) {
+        console.log(`joining room ${room.name}, ${room.id}`)
+        var old_room_id = 0
+        if (this.props.curUser===null){
+            console.log("something is null")
+            console.log(this.props.curRoom, this.props.curUser)
+            return
+        }   
+        if (this.props.curRoom!==null && null !== this.props.curRoom.id) {
+            old_room_id = this.props.curRoom.id
+        }
+        var actionPayload = {
+            actionType: "join_room",
+            userID: this.props.curUser.id,
+            roomID: old_room_id,
+            newRoomID: room.id,
+            dmUserID: 0,
+            newRoomName: ""
+        }
+        this.props.onJoinRoom(room)
+        console.log("room changed - not null")
         this.actWebsocket.send(JSON.stringify(actionPayload))
     }
 
