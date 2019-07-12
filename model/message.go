@@ -11,9 +11,12 @@ type Message struct {
 	// Foreign keys
 	SenderID uint `gorm:"column:sender_id"       json:"sender_id"`
 	RoomID   uint `gorm:"column:room_id"       json:"room_id"`
+}
 
-	// Json only
-	SenderName string `json:"sender_name"`
+// MessageHistory contains a message and a sender name.
+type MessageHistory struct {
+	Message
+	SenderName string `gorm:"column:name" json:"userName"`
 }
 
 // TableName tells GORM where to find this record.

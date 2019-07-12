@@ -47,10 +47,10 @@ type MessageResponsePayload struct {
 // ActionResponsePayload holds the message content to be communicated from the
 // message broker to users logged on
 type ActionResponsePayload struct {
-	ActionType     string           `json:"actionType"`
-	UserID         uint             `json:"userID"`
-	RoomID         uint             `json:"roomID"`
-	UserName       string           `json:"userName"`
-	RoomName       string           `json:"roomName"`
-	MessageHistory []*model.Message `json:"messageHistory"`
+	ActionType     string                  `json:"actionType"`
+	UserID         uint                    `json:"userID"`
+	RoomID         uint                    `json:"roomID"`
+	UserName       string                  `json:"userName"`
+	RoomName       string                  `json:"roomName"`
+	MessageHistory []*model.MessageHistory `json:"messageHistory"`
 }

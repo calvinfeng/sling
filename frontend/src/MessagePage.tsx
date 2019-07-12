@@ -6,12 +6,10 @@ import './MessagePage.css';
 import SideBar from './components/SideBar';
 import DisplayWindow from './components/DisplayWindow';
 import InputBox from './components/InputBox';
-import * as actions from './actions'
-import { AppActionTypes } from './actions/types'
 
 import { AppState } from './store'
 import { User, Room, Message } from './types'
-import curRoom from './reducers/curRoom';
+import { dispatchActions } from './store/dispatch'
 
 type MessagePageState = {
     inputEnabled: boolean
@@ -34,51 +32,11 @@ type OwnProps = {
 }
 
 const mapStateToProps = (state: AppState, ownProps: OwnProps) => ({ ...state, ...ownProps })
-const mapDispatchToProps = (dispatch: React.Dispatch<AppActionTypes>) => {
-    return {
-        onLogIn: (user: User) => {
-            dispatch(actions.logIn(user))
-        },
-        onLogOut: () => {
-            dispatch(actions.logOut())
-        },
-
-        onLoadMessages: (messages: Message[]) => {
-            dispatch(actions.loadMessages(messages))
-        },
-        onLoadRooms: (rooms: Room[]) => {
-            dispatch(actions.loadRooms(rooms))
-        },
-        onLoadUsers: (users: User[]) => {
-            dispatch(actions.loadUsers(users))
-        },
-        onMarkUnread: (roomID: number) => {
-            dispatch(actions.markUnread(roomID))
-        },
-        onNewMessage: (message: Message) => {
-            dispatch(actions.newMessage(message))
-        },
-        onNewRoom: (room: Room) => {
-            dispatch(actions.newRoom(room))
-        },
-        onNewUser: (user: User) => {
-            dispatch(actions.newUser(user))
-        },
-
-        onJoinRoom: (room: Room) => {
-            dispatch(actions.joinRoom(room))
-        },
-        onChangeRoom: (room: Room) => {
-            dispatch(actions.changeRoom(room))
-        },
-    }
-}
-
-type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof mapDispatchToProps>
+type Props = ReturnType<typeof mapStateToProps> & ReturnType<typeof dispatchActions>
 
 class MessagePage extends React.Component<Props, MessagePageState> {
     private msgWebsocket!: WebSocket
-    private actWebsocket!: WebSocket 
+    private actWebsocket!: WebSocket
     readonly state: MessagePageState = initialState
     private messagesEnd = React.createRef<HTMLDivElement>()
 
@@ -153,7 +111,6 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             this.actWebsocket.onerror = this.handleActWebsocketError
             this.actWebsocket.onmessage = this.handleActWebsocketMessage
         })
-
     }
 
     handleMsgWebsocketOpen = (ev: Event) => {
@@ -278,9 +235,8 @@ class MessagePage extends React.Component<Props, MessagePageState> {
 
     sendMessage(body: String) {
         console.log(`sending ${body}`)
-        // TODO: send message
+        // TODO: send message to server
         this.setState({ inputEnabled: false })
-
     }
 
     changeRoom(nextRoom: Room) {
@@ -311,10 +267,20 @@ class MessagePage extends React.Component<Props, MessagePageState> {
         //this.actWebsocket.re
     }
 
+    joinRoom(nextRoom: Room) {
+        if (nextRoom.hasJoined) {
+            return
+        }
+
+        // TODO: send action to server
+
+        this.props.onJoinRoom(nextRoom)
+    }
+
     startDM(user: User) {
         console.log(user)
 
-        //TODO: start DM
+        // TODO: send action to server
     }
 
     scrollToBottom = () => {
@@ -331,9 +297,14 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                         rooms={this.props.rooms}
                         users={this.props.users}
 
-                        logOut={this.props.setLoggedOut}
+                        logOut={() => {
+                            this.props.setLoggedOut()
+                            this.actWebsocket.close()
+                            this.msgWebsocket.close()
+                            console.log('logging out, closed websockets')
+                        }}
                         changeRoom={(room: Room) => this.changeRoom(room)}
-                        joinRoom={(room: Room) => this.props.onJoinRoom(room)}
+                        joinRoom={(room: Room) => this.joinRoom(room)}
                         startDM={(user: User) => this.startDM(user)}
                     />
                 </div>
@@ -357,4 +328,4 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     }
 }
 
-export default connect(mapStateToProps, mapDispatchToProps)(MessagePage);
+export default connect(mapStateToProps, dispatchActions)(MessagePage);
