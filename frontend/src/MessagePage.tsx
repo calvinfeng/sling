@@ -141,7 +141,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             this.props.onNewMessage({
                 msgID: msgResponsePayload.userID, // TODO make a real messageID
                 userID: msgResponsePayload.userID,
-                username: msgResponsePayload.userID, // TODO make username
+                username: msgResponsePayload.userName,
                 time: new Date(msgResponsePayload.time),
                 body: msgResponsePayload.body,
             });
