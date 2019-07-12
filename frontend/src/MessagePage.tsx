@@ -110,8 +110,13 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     }
 
     componentWillUnmount() {
-        this.actWebsocket.close()
-        this.msgWebsocket.close()
+        if (this.actWebsocket) {
+            this.actWebsocket.close()
+        }
+
+        if (this.msgWebsocket) {
+            this.msgWebsocket.close()
+        }
         console.log('component unmounting, closed websockets')
     }
 
@@ -197,7 +202,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                 messages.push({
                     msgID: msgs[i].id,
                     userID: msgs[i].userID,
-                    username: msgs[i].userName, //TODO fix
+                    username: msgs[i].userName,
                     time: new Date(msgs[i].time), //
                     body: msgs[i].body
                 })
@@ -213,13 +218,13 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             }
             let newRoom = {
                 id: actResponsePayload.roomID,
-                name: actResponsePayload.roomName, //TODO room name
+                name: actResponsePayload.roomName,
                 hasJoined: true,
                 hasNotification: false,
                 isDM: true,
             }
             this.props.onNewRoom(newRoom)
-            if (this.props.curUser != null && actResponsePayload.userID == this.props.curUser.id) {
+            if (this.props.curUser !== null && actResponsePayload.userID === this.props.curUser.id) {
                 this.props.onChangeRoom(newRoom)
             }
         } else if (actResponsePayload.actionType === "new_user") {
@@ -269,27 +274,18 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             time: (new Date()),
             body: body,
         }
-        console.log(Date.now())
-        console.log(new Date())
 
         this.msgWebsocket.send(JSON.stringify(messagePayload))
-        //TODO: when is my state updated?
     }
 
     changeRoom(nextRoom: Room) {
         console.log("room changed")
-        var old_room_id = 0
-        if (this.props.curRoom !== null && null !== this.props.curRoom.id) {
-            old_room_id = this.props.curRoom.id
-        }
         if (this.props.curUser === null) {
             console.log("change room failed- something is null")
             console.log(this.props.curRoom, this.props.curUser)
             return
         }
-        if (this.props.curRoom && nextRoom.id === this.props.curRoom.id) {
-            return
-        }
+
         let curRoomID = 0
         if (this.props.curRoom) {
             if (nextRoom.id === this.props.curRoom.id) {
@@ -298,12 +294,10 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             curRoomID = this.props.curRoom.id
         }
 
-
-        // TODO: load next room's messages
         var actionPayload = {
             actionType: "change_room",
             userID: this.props.curUser.id,
-            roomID: old_room_id,
+            roomID: curRoomID,
             newRoomID: nextRoom.id,
             dmUserID: 0,
             newRoomName: ""
@@ -312,7 +306,6 @@ class MessagePage extends React.Component<Props, MessagePageState> {
         this.props.onChangeRoom(nextRoom)
         console.log("room changed - not null")
         this.actWebsocket.send(JSON.stringify(actionPayload))
-        //this.actWebsocket.re
     }
 
     createRoom(name: string) {
@@ -350,7 +343,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
         var actionPayload = {
             actionType: "create_dm",
             userID: this.props.curUser.id,
-            roomID: this.props.curRoom && this.props.curRoom.id || 0,
+            roomID: this.props.curRoom ? this.props.curRoom.id : 0,
             newRoomID: 0,
             dmUserID: user.id,
             newRoomName: ""
@@ -358,7 +351,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
 
         this.actWebsocket.send(JSON.stringify(actionPayload))
     }
-    
+
     joinRoom(nextRoom: Room) {
         if (nextRoom.hasJoined) {
             return
