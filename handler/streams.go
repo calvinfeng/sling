@@ -9,12 +9,12 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"net/http"
-	"sync"
-
 	"github.com/calvinfeng/sling/util"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
+	"net/http"
+	"sync"
+	"time"
 )
 
 // GetActionStreamHandler : handles the websocket connection request for
@@ -27,7 +27,6 @@ func GetActionStreamHandler(upgrader *websocket.Upgrader) echo.HandlerFunc {
 	}
 
 	return func(ctx echo.Context) error {
-		util.LogInfo("initiate action connection")
 		actionConn, err := upgrader.Upgrade(ctx.Response(), ctx.Request(), nil)
 		if err != nil {
 			util.LogErr("failure to upgrade action request - closing connection", err)
@@ -36,7 +35,6 @@ func GetActionStreamHandler(upgrader *websocket.Upgrader) echo.HandlerFunc {
 		}
 
 		_, bytes, err := actionConn.ReadMessage()
-		util.LogInfo("read action connection")
 
 		c := &TokenCredential{}
 		errM := json.Unmarshal(bytes, c) // converts json to payload
@@ -75,7 +73,6 @@ func GetMessageStreamHandler(upgrader *websocket.Upgrader) echo.HandlerFunc { //
 	}
 
 	return func(ctx echo.Context) error {
-		util.LogInfo("initiate message connection")
 
 		messageConn, err := upgrader.Upgrade(ctx.Response(), ctx.Request(), nil)
 		if err != nil {
@@ -85,12 +82,10 @@ func GetMessageStreamHandler(upgrader *websocket.Upgrader) echo.HandlerFunc { //
 		}
 
 		_, bytes, err := messageConn.ReadMessage()
-		util.LogInfo("read message connection")
 
 		c := &TokenCredential{}
 
 		errM := json.Unmarshal(bytes, c) // converts json to payload
-		util.LogInfo("umarsh message connection")
 
 		if errM != nil {
 			util.LogErr("Error in reading token - closing connection", errM)
@@ -106,8 +101,9 @@ func GetMessageStreamHandler(upgrader *websocket.Upgrader) echo.HandlerFunc { //
 
 		var actionConn *websocket.Conn = getActionConn(user.ID)
 
-		connectClient(messageConn, actionConn, user.ID)
-
+		if actionConn != nil {
+			connectClient(messageConn, actionConn, user.ID)
+		}
 		return nil
 	}
 
@@ -141,20 +137,30 @@ func connectClient(messageConn *websocket.Conn, actionConn *websocket.Conn, user
 // getActionConn : waits for action stream connection to be passed along channel
 // mapped by userID, and then returns a reference to that connection
 func getActionConn(userID uint) *websocket.Conn {
-	// TODO: set a timeout
+	// set a timeout for 3 seconds
+	timer := time.NewTimer(3 * time.Second)
+	defer timer.Stop()
+
 	for {
 		// wait for this users channel to be created
-		broker.mux.Lock()
-		ch, ok := broker.websocketsByUserID[userID]
-		broker.mux.Unlock()
-
-		if ok {
-			// wait for the connection information to be sent
-			for {
-				select {
-				case actionConn := <-ch:
-					return actionConn
-				default:
+		select {
+		case <-timer.C:
+			util.LogErr("timed out on websocket sync", nil)
+			return nil
+		default:
+			broker.mux.Lock()
+			ch, ok := broker.websocketsByUserID[userID]
+			broker.mux.Unlock()
+			if ok {
+				// wait for the connection information to be sent
+				for {
+					select {
+					case actionConn := <-ch:
+						return actionConn
+					case <-timer.C:
+						util.LogErr("timed out on websocket sync", nil)
+						return nil
+					}
 				}
 			}
 		}
