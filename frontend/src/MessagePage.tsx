@@ -133,7 +133,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
 
     handleMsgWebsocketClose = (ev: CloseEvent) => {
         this.setState({ connectedToMsgSocket: false, });
-        alert("Server has Disconnected")
+        alert("Server has disconnected.. Please Log Out")  
     }
 
     handleMsgWebsocketMessage = (mev: MessageEvent) => {
@@ -175,8 +175,8 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     }
 
     handleActWebsocketClose = (ev: CloseEvent) => {
-        this.setState({ connectedToActSocket: false, });
-        alert("Server has disconnected")
+        this.setState({ connectedToMsgSocket: false, });
+        alert("Server has disconnected.. Please Log Out")  
     }
 
     handleActWebsocketError = (ev: Event) => {

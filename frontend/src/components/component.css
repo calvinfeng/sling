@@ -30,15 +30,16 @@
     margin-bottom: 0.4rem;
 }
 
-.SBlist.normal  {
-    color: #666;
-}
-
 .SBlist > li {
     height: 20px;
     width: 80%;
     padding: 5px;
     margin-top: 2px;
+}
+
+.SBnewchannel {
+    color: #666;
+    font-size: 14px;
 }
 
 .SBhoverable {
@@ -56,6 +57,7 @@
 .SBdmuser {
     color: #666;
     border-radius: 10px;
+    font-size: 14px;
 }
 
 .curroom {
