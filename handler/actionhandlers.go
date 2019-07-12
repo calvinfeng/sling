@@ -9,8 +9,6 @@ Summary: includes all handlers for actions change_room, send_message, create_dm,
 package handler
 
 import (
-	"fmt"
-
 	"github.com/calvinfeng/sling/model"
 	"github.com/calvinfeng/sling/util"
 	"github.com/jinzhu/gorm"
