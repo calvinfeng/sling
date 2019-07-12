@@ -92,11 +92,6 @@ func NewUserHandler(db *gorm.DB) echo.HandlerFunc {
 		payload := ActionPayload{UserID: user.ID}
 		broker.handleCreateUser(payload)
 
-		/*actions <- ActionPayload{
-			actionType: "new_user",
-			userID: user.ID
-		}*/
-
 		return ctx.JSON(http.StatusCreated, user)
 	}
 }
