@@ -42,7 +42,7 @@ func GetUsersInARoom(db *gorm.DB, roomID uint) ([]*User, error) {
 func GetRooms(db *gorm.DB, userID uint) ([]*RoomDetail, error) {
 	rooms := []*RoomDetail{}
 	subquery := db.Select("usersrooms.*").Table("usersrooms").Where("user_id = ?", userID).SubQuery()
-	rows, err := db.Debug().Select(`rooms.id, rooms.name, rooms.room_type,
+	rows, err := db.Select(`rooms.id, rooms.name, rooms.room_type,
 		ur.user_id IS NOT NULL as inroom, COALESCE(ur.unread, false) as unread`).
 		Table("rooms").
 		Joins("LEFT JOIN ? as ur ON rooms.id = ur.room_id", subquery).
