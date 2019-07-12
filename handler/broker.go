@@ -108,13 +108,21 @@ func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
 	// whose Ids are not in mb.groupByRoomID[p.roomID], update to unread
 	belongToRoom := make(map[uint]bool)
 	UsersInRoom, err := model.GetUsersInARoom(mb.db, p.RoomID)
+	curViewing := make(map[uint]bool)
 	if err != nil {
 		util.LogErr("users in room fetch err", err)
 		return
 	}
+
+	for _, client := range mb.groupByRoomID[p.RoomID] {
+		curViewing[client.UserID()] = true
+	}
+
 	for _, user := range UsersInRoom {
-		model.UpdateNotificationStatus(mb.db, p.RoomID, user.ID, true)
-		belongToRoom[user.ID] = true
+		if _, ok := curViewing[user.ID]; !ok {
+			model.UpdateNotificationStatus(mb.db, p.RoomID, user.ID, true)
+			belongToRoom[user.ID] = true
+		}
 	}
 
 	name := model.GetUserNameByID(mb.db, p.UserID)
