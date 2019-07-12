@@ -9,11 +9,12 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"sync"
+
 	"github.com/calvinfeng/sling/util"
 	"github.com/gorilla/websocket"
 	"github.com/labstack/echo/v4"
-	"net/http"
-	"sync"
 )
 
 // GetActionStreamHandler : handles the websocket connection request for

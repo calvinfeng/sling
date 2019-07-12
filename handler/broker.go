@@ -9,11 +9,12 @@ package handler
 
 import (
 	"context"
+	"sync"
+
 	"github.com/calvinfeng/sling/model"
 	"github.com/calvinfeng/sling/util"
 	"github.com/gorilla/websocket"
 	"github.com/jinzhu/gorm"
-	"sync"
 	// "github.com/labstack/echo/v4"
 	// _ "github.com/labstack/echo/v4/middleware"
 )
@@ -100,14 +101,12 @@ func (mb *MessageBroker) handleAddClient(c Client) {
 // handleSendMessage : updates database, sends messages and notifications to
 // clients when the broker recieves a new message
 func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
-
 	// DATABASE add message mb to database
-
 	model.InsertMessage(mb.db, p.Time, p.Body, p.UserID, p.RoomID)
 
-	belongToRoom := make(map[uint]bool)
 	// DATABASE for all users in room p.roomId,
 	// whose Ids are not in mb.groupByRoomID[p.roomID], update to unread
+	belongToRoom := make(map[uint]bool)
 	UsersInRoom, err := model.GetUsersInARoom(mb.db, p.RoomID)
 	if err != nil {
 		util.LogErr("users in room fetch err", err)
@@ -118,9 +117,12 @@ func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
 		belongToRoom[user.ID] = true
 	}
 
+	name := model.GetUserNameByID(mb.db, p.UserID)
+
 	// update p to be a notification type
 	message := MessageResponsePayload{
 		MessageType: "new_message",
+		UserName:    name,
 		UserID:      p.UserID,
 		RoomID:      p.RoomID,
 		Time:        p.Time,
