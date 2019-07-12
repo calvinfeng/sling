@@ -27,26 +27,18 @@ Compile and run the server code:
 ```shell
 go install
 sling runmigrations
-sling runserver
 ```
-Open localhost:8888 on your browser to begin chatting!
 
-# How to Test the Frontend UI Using NPM
-
-The following commands will allow you to host the frontend files on `localhost:3000` using npm. They will NOT connect properly to the backend using these commands, only allow you to test the UI.
-
-```unix
-cd frontend/
-npm install
-npm start
-```
-Open `localhost:3000` to see the content.
-
-# How to Compile the Frontend 
-
-This compiles a build in frontend/public/build, which is then hosted when you run ``sling runserver``.
-
+Build the frontend:
 ```unix
 cd frontend/
 npm run build
 ```
+
+Finally, run the server:
+```unix
+sling runserver
+```
+
+Open localhost:8888 on your browser to begin chatting!
+
