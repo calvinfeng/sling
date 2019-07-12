@@ -38,6 +38,7 @@ type ActionPayload struct {
 // message broker to users logged on
 type MessageResponsePayload struct {
 	MessageType string `json:"messageType"`
+	UserName    string `json:"userName"`
 	UserID      uint   `json:"userID"`
 	RoomID      uint   `json:"roomID"`
 	Time        string `json:"time"`
