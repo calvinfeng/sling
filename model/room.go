@@ -7,6 +7,14 @@ type Room struct {
 	Type     int    `gorm:"column:room_type"        json:"room_type"`
 }
 
+// RoomDetail is a model for rooms with user-specific details,
+// including whether it's unread and whether it's joined.
+type RoomDetail struct {
+	Room
+	Joined bool `gorm:"column:inroom" json:"hasJoined"`
+	Unread bool `gorm:"column:unread" json:"hasNotification"`
+}
+
 // TableName tells GORM where to find this record.
 func (Room) TableName() string {
 	return "rooms"
