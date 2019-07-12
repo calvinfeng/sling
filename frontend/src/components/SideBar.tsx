@@ -76,6 +76,7 @@ class SideBar extends Component<SideBarProps, SideBarState> {
 
     findDirectMsgName = (name: string) => {
         const names: string[] = name.split("~")
+        if (names.length < 2) return name;
         if (names[0] !== this.props.curUser.username) return names[0];
         return names[1];
     }
