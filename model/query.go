@@ -3,8 +3,6 @@ package model
 
 import (
 	"errors"
-	"fmt"
-	"github.com/calvinfeng/sling/util"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -162,7 +160,6 @@ func InsertDMRoom(db *gorm.DB, user_id uint, tar_user_id uint) (uint, string, er
 
 // InsertUserroom insert a new userroom
 func InsertUserroom(db *gorm.DB, user_id uint, room_id uint, unread bool) error {
-	util.LogInfo(fmt.Sprintf("room id from query insert %d", room_id))
 	sqlStatement := `
 	INSERT INTO usersrooms (user_id, room_id, unread)
 	VALUES(?,?,?)`
