@@ -3,9 +3,9 @@ import {
     NEW_USER,
     LOAD_USERS,
     AppActionTypes
-} from '../actions/types'
+} from '../../actions/types'
 
-import { User } from '../types'
+import { User } from '../../types'
 
 export default function users(state: User[] = [], action: AppActionTypes): User[] {
     switch (action.type) {

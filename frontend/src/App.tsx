@@ -1,8 +1,7 @@
 import React from 'react';
 import './App.css';
-import Login from './components/Login'
-import ReduxTester from './components/ReduxTester'
-import MessagePage from './MessagePage'
+import Login from './containers/LoginPage'
+import MessagePage from './containers/MessagePage'
 
 import { Provider } from 'react-redux';
 import { applyMiddleware, createStore } from 'redux';

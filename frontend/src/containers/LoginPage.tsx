@@ -7,7 +7,7 @@ import {
     Button
 } from '@material-ui/core'
 import { User } from '../types'
-import { logIn } from '../actions'
+import { logIn } from '../actions/users/actions'
 import { AppActionTypes } from '../actions/types'
 
 const initialState = {

@@ -2,14 +2,15 @@ import * as React from 'react';
 import { connect } from 'react-redux'
 import axios, { AxiosResponse } from 'axios'
 
-import './MessagePage.css';
-import SideBar from './components/SideBar';
-import DisplayWindow from './components/DisplayWindow';
-import InputBox from './components/InputBox';
+import SideBar from '../components/message/SideBar';
+import DisplayWindow from '../components/message/DisplayWindow';
+import InputBox from '../components/message/InputBox';
 
-import { AppState } from './store'
-import { User, Room, Message } from './types'
-import { dispatchActions } from './store/dispatch'
+import { AppState } from '../store'
+import { User, Room, Message } from '../types'
+import { dispatchActions } from '../store/dispatch'
+
+import './MessagePage.scss';
 
 type MessagePageState = {
     inputEnabled: boolean

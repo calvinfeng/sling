@@ -3,9 +3,9 @@ import {
     CHANGE_ROOM,
     JOIN_ROOM,
     AppActionTypes
-} from '../actions/types'
+} from '../../actions/types'
 
-import { Room } from '../types'
+import { Room } from '../../types'
 
 export default function curRoom(state: Room | null = null, action: AppActionTypes): Room | null {
     switch (action.type) {

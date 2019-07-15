@@ -4,9 +4,9 @@ import {
     LOAD_ROOMS,
     MARK_UNREAD,
     AppActionTypes
-} from '../actions/types'
+} from '../../actions/types'
 
-import { Room } from '../types'
+import { Room } from '../../types'
 
 export default function rooms(state: Room[] = [], action: AppActionTypes): Room[] {
     switch (action.type) {

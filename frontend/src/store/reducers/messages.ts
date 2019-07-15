@@ -5,9 +5,9 @@ import {
     CHANGE_ROOM,
     JOIN_ROOM,
     AppActionTypes
-} from '../actions/types'
+} from '../../actions/types'
 
-import { Message } from '../types'
+import { Message } from '../../types'
 
 export default function messages(state: Message[] = [], action: AppActionTypes) {
     switch (action.type) {

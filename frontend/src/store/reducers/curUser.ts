@@ -2,9 +2,9 @@ import {
     LOG_IN,
     LOG_OUT,
     AppActionTypes
-} from '../actions/types'
+} from '../../actions/types'
 
-import { User } from '../types'
+import { User } from '../../types'
 
 export default function curUser(state: User | null = null, action: AppActionTypes): User | null {
     switch (action.type) {
