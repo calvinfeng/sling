@@ -5,30 +5,30 @@ import {
     CHANGE_ROOM,
     MARK_UNREAD,
     JOIN_ROOM,
-    AppActionTypes
-} from '../types'
+    RoomAction
+} from '.'
 
-export const newRoom = (room: Room): AppActionTypes => ({
+export const newRoom = (room: Room): RoomAction => ({
     type: NEW_ROOM,
     room
 })
 
-export const loadRooms = (rooms: Room[]): AppActionTypes => ({
+export const loadRooms = (rooms: Room[]): RoomAction => ({
     type: LOAD_ROOMS,
     rooms
 })
 
-export const changeRoom = (room: Room): AppActionTypes => ({
+export const changeRoom = (room: Room): RoomAction => ({
     type: CHANGE_ROOM,
     room
 })
 
-export const markUnread = (roomID: number): AppActionTypes => ({
+export const markUnread = (roomID: number): RoomAction => ({
     type: MARK_UNREAD,
     roomID
 })
 
-export const joinRoom = (room: Room): AppActionTypes => ({
+export const joinRoom = (room: Room): RoomAction => ({
     type: JOIN_ROOM,
     room
 })

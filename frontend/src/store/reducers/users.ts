@@ -2,12 +2,12 @@ import {
     LOG_OUT,
     NEW_USER,
     LOAD_USERS,
-    AppActionTypes
-} from '../../actions/types'
+    UserAction
+} from '../../actions/users'
 
 import { User } from '../../types'
 
-export default function users(state: User[] = [], action: AppActionTypes): User[] {
+export default function users(state: User[] = [], action: UserAction): User[] {
     switch (action.type) {
         case LOG_OUT:
             return []

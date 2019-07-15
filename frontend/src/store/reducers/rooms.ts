@@ -3,12 +3,12 @@ import {
     NEW_ROOM,
     LOAD_ROOMS,
     MARK_UNREAD,
-    AppActionTypes
-} from '../../actions/types'
+    RoomAction
+} from '../../actions/rooms'
 
 import { Room } from '../../types'
 
-export default function rooms(state: Room[] = [], action: AppActionTypes): Room[] {
+export default function rooms(state: Room[] = [], action: RoomAction): Room[] {
     switch (action.type) {
         case LOG_OUT:
             return []

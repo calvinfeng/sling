@@ -2,15 +2,15 @@ import { Message } from '../../types'
 import {
     NEW_MESSAGE,
     LOAD_MESSAGES,
-    AppActionTypes
-} from '../types'
+    MessageAction
+} from '.'
 
-export const newMessage = (message: Message): AppActionTypes => ({
+export const newMessage = (message: Message): MessageAction => ({
     type: NEW_MESSAGE,
     message
 })
 
-export const loadMessages = (messages: Message[]): AppActionTypes => ({
+export const loadMessages = (messages: Message[]): MessageAction => ({
     type: LOAD_MESSAGES,
     messages
 })

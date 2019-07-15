@@ -2,12 +2,12 @@ import {
     LOG_OUT,
     CHANGE_ROOM,
     JOIN_ROOM,
-    AppActionTypes
-} from '../../actions/types'
+    RoomAction
+} from '../../actions/rooms'
 
 import { Room } from '../../types'
 
-export default function curRoom(state: Room | null = null, action: AppActionTypes): Room | null {
+export default function curRoom(state: Room | null = null, action: RoomAction): Room | null {
     switch (action.type) {
         case LOG_OUT:
             return null

@@ -4,24 +4,24 @@ import {
     LOG_OUT,
     NEW_USER,
     LOAD_USERS,
-    AppActionTypes
-} from '../types'
+    UserAction
+} from '.'
 
-export const logIn = (user: User): AppActionTypes => ({
+export const logIn = (user: User): UserAction => ({
     type: LOG_IN,
     user
 })
 
-export const logOut = (): AppActionTypes => ({
+export const logOut = (): UserAction => ({
     type: LOG_OUT
 })
 
-export const newUser = (user: User): AppActionTypes => ({
+export const newUser = (user: User): UserAction => ({
     type: NEW_USER,
     user
 })
 
-export const loadUsers = (users: User[]): AppActionTypes => ({
+export const loadUsers = (users: User[]): UserAction => ({
     type: LOAD_USERS,
     users
 })
