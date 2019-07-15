@@ -5,6 +5,27 @@ export const LOAD_ROOMS = 'LOAD_ROOMS'
 export const CHANGE_ROOM = 'CHANGE_ROOM'
 export const MARK_UNREAD = 'MARK_UNREAD'
 export const JOIN_ROOM = 'JOIN_ROOM'
+export const CLEAR_ROOMS = 'CLEAR_ROOMS'
+export const START_ROOM_LOADING = 'START_ROOM_LOADING'
+export const STOP_ROOM_LOADING = 'STOP_ROOM_LOADING'
+export const FAIL_ROOM_LOADING = 'FAIL_ROOM_LOADING'
+
+type ClearRoomsAction = {
+    type: typeof CLEAR_ROOMS
+}
+
+type StartRoomLoadingAction = {
+    type: typeof START_ROOM_LOADING
+}
+
+type StopRoomLoadingAction = {
+    type: typeof STOP_ROOM_LOADING
+}
+
+type FailRoomLoadingAction = {
+    type: typeof FAIL_ROOM_LOADING
+    message: string
+}
 
 type NewRoomAction = {
     type: typeof NEW_ROOM
@@ -35,4 +56,15 @@ export type RoomAction = NewRoomAction |
     LoadRoomsAction |
     ChangeRoomAction |
     MarkUnreadAction |
-    JoinRoomAction
+    JoinRoomAction | 
+    ClearRoomsAction | 
+    StartRoomLoadingAction | 
+    StopRoomLoadingAction | 
+    FailRoomLoadingAction
+
+export type RoomStoreState = {
+    loading: boolean
+    data: Room[]
+    current: Room | null
+    error: string
+}

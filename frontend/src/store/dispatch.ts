@@ -3,15 +3,16 @@ import { AppActionTypes } from '../actions/types'
 import * as msgActions from '../actions/messages/actions'
 import * as roomActions from '../actions/rooms/actions'
 import * as userActions from '../actions/users/actions'
+import * as authActions from '../actions/auth/actions'
 import { User, Message, Room } from '../types'
 
 export const dispatchActions = (dispatch: Dispatch<AppActionTypes>) => {
     return {
         onLogIn: (user: User) => {
-            dispatch(userActions.logIn(user))
+            dispatch(authActions.logIn(user))
         },
         onLogOut: () => {
-            dispatch(userActions.logOut())
+            dispatch(authActions.logOut())
         },
 
         onLoadMessages: (messages: Message[]) => {

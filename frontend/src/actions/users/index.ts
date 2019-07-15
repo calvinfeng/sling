@@ -1,18 +1,11 @@
 import { User } from '../../types'
 
-export const LOG_IN = 'LOG_IN'
-export const LOG_OUT = 'LOG_OUT'
 export const NEW_USER = 'NEW_USER'
 export const LOAD_USERS = 'LOAD_USERS'
-
-type LogInAction = {
-    type: typeof LOG_IN
-    user: User
-}
-
-type LogOutAction = {
-    type: typeof LOG_OUT
-}
+export const CLEAR_USERS = 'CLEAR_USERS'
+export const START_USER_LOADING = 'START_USER_LOADING'
+export const STOP_USER_LOADING = 'STOP_USER_LOADING'
+export const FAIL_USER_LOADING = 'FAIL_USER_LOADING'
 
 type NewUserAction = {
     type: typeof NEW_USER
@@ -24,7 +17,32 @@ type LoadUsersAction = {
     users: User[]
 }
 
-export type UserAction = LogInAction |
-    LogOutAction |
-    NewUserAction |
-    LoadUsersAction
+type ClearUsersAction = {
+    type: typeof CLEAR_USERS
+}
+
+type StartUserLoadingAction = {
+    type: typeof START_USER_LOADING
+}
+
+type StopUserLoadingAction = {
+    type: typeof STOP_USER_LOADING
+}
+
+type FailUserLoadingAction = {
+    type: typeof FAIL_USER_LOADING
+    message: string
+}
+
+export type UserAction = NewUserAction |
+    LoadUsersAction |
+    ClearUsersAction | 
+    StartUserLoadingAction | 
+    StopUserLoadingAction |
+    FailUserLoadingAction
+
+export type UserStoreState = {
+    loading: boolean
+    data: User[]
+    error: string
+}
