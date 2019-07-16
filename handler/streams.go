@@ -15,7 +15,6 @@ import (
 	"github.com/calvinfeng/sling/stream/conn"
 	"github.com/calvinfeng/sling/util"
 	"github.com/gorilla/websocket"
-	//"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
 	"net/http"
 	"sync"
@@ -56,6 +55,10 @@ func GetActionStreamHandler(upgrader *websocket.Upgrader, broker stream.Broker) 
 			actionConn.Close()
 			return echo.NewHTTPError(http.StatusUnauthorized, "wrong username or password")
 		}
+		if broker.CheckDuplicate(user.ID) {
+			actionConn.Close()
+			return echo.NewHTTPError(http.StatusUnauthorized, "this user is already logged in")
+		}
 
 		// make host channel for other socket to pass connection to
 		broker.LockMux()
@@ -68,7 +71,7 @@ func GetActionStreamHandler(upgrader *websocket.Upgrader, broker stream.Broker) 
 		if errS != nil {
 			util.LogErr("websockets failed to sync", errS)
 			actionConn.Close()
-			return nil
+			return echo.NewHTTPError(http.StatusUnauthorized, "users could not connect")
 		}
 
 		return nil
@@ -112,11 +115,16 @@ func GetMessageStreamHandler(upgrader *websocket.Upgrader, broker stream.Broker)
 			messageConn.Close()
 			return echo.NewHTTPError(http.StatusUnauthorized, "wrong username or password")
 		}
+		if broker.CheckDuplicate(user.ID) {
+			messageConn.Close()
+			return echo.NewHTTPError(http.StatusUnauthorized, "this user is already logged in")
+		}
 
 		actionConn, err := getActionConn(broker, user.ID)
 		if err != nil {
 			util.LogErr("streams could not connect", err)
 			messageConn.Close()
+			return echo.NewHTTPError(http.StatusUnauthorized, "users could not connect")
 		}
 		connectClient(broker, messageConn, actionConn, user.ID)
 		return nil
@@ -129,7 +137,7 @@ func GetMessageStreamHandler(upgrader *websocket.Upgrader, broker stream.Broker)
 func connectClient(broker stream.Broker, messageConn stream.Conn, actionConn stream.Conn, userID uint) {
 	defer messageConn.Close() // defer to execute after return
 	defer actionConn.Close()
-	defer broker.SetSyncChannel(userID, nil)
+	defer broker.DeleteSyncChannel(userID)
 
 	cli := client.NewWebSocketClient(messageConn, actionConn, userID)
 
@@ -142,6 +150,7 @@ func connectClient(broker stream.Broker, messageConn stream.Conn, actionConn str
 	util.LogInfo(fmt.Sprintf("client %d has joined the chatroom", cli.UserID()))
 
 	var wg sync.WaitGroup
+
 	wg.Add(2)
 	go cli.MessageListen(&wg)
 	go cli.ActionListen(&wg)
