@@ -5,16 +5,16 @@ Websocket clients to perform broadcasts to other clients or change the database.
 ==============================================================================*/
 //NOTE: all database commands are not completed, and are marked with "DATABASE"
 
-package handler
+package broker
 
 import (
 	"context"
-	"sync"
 
 	"github.com/calvinfeng/sling/model"
+	"github.com/calvinfeng/sling/stream"
 	"github.com/calvinfeng/sling/util"
-	"github.com/gorilla/websocket"
 	"github.com/jinzhu/gorm"
+	"sync"
 )
 
 // MessageBroker is a central hub that broadcasts all messages and actions,
@@ -22,37 +22,73 @@ import (
 type MessageBroker struct {
 	db                 *gorm.DB
 	ctx                context.Context
-	clientByID         map[uint]Client
+	clientByID         map[uint]stream.Client
 	cancelByID         map[uint]context.CancelFunc
-	sendMessage        chan MessagePayload
-	addClient          chan Client
-	removeClient       chan Client
-	sendAction         chan ActionPayload
-	groupByRoomID      map[uint]map[uint]Client
-	websocketsByUserID map[uint]chan *websocket.Conn
+	sendMessage        chan stream.MessagePayload
+	addClient          chan stream.Client
+	removeClient       chan stream.Client
+	sendAction         chan stream.ActionPayload
+	groupByRoomID      map[uint]map[uint]stream.Client
+	websocketsByUserID map[uint]chan stream.Conn
 	mux                *sync.Mutex
 }
 
-var broker *MessageBroker
-
-// RunBroker : creates a broker and go routine to loop checking for messages
-// from clients
-func RunBroker(ctx context.Context, db *gorm.DB) {
-	broker = &MessageBroker{
+func SetupBroker(ctx context.Context, db *gorm.DB) *MessageBroker {
+	broker := &MessageBroker{
 		db:                 db,
 		ctx:                ctx,
-		clientByID:         make(map[uint]Client),
+		clientByID:         make(map[uint]stream.Client),
 		cancelByID:         make(map[uint]context.CancelFunc),
-		sendMessage:        make(chan MessagePayload),
-		addClient:          make(chan Client),
-		removeClient:       make(chan Client),
-		sendAction:         make(chan ActionPayload),
-		groupByRoomID:      make(map[uint]map[uint]Client),
-		websocketsByUserID: make(map[uint]chan *websocket.Conn),
+		sendMessage:        make(chan stream.MessagePayload),
+		addClient:          make(chan stream.Client),
+		removeClient:       make(chan stream.Client),
+		sendAction:         make(chan stream.ActionPayload),
+		groupByRoomID:      make(map[uint]map[uint]stream.Client),
+		websocketsByUserID: make(map[uint]chan stream.Conn),
 		mux:                &sync.Mutex{},
 	}
-
 	go broker.loop()
+	return broker
+}
+
+/***These functions allow separation of packages, but will be changed later***/
+
+func (mb *MessageBroker) AddClientQueue() chan stream.Client {
+	return mb.addClient
+}
+
+func (mb *MessageBroker) RemoveClientQueue() chan stream.Client {
+	return mb.removeClient
+}
+
+func (mb *MessageBroker) LockMux() {
+	mb.mux.Lock()
+}
+
+func (mb *MessageBroker) UnlockMux() {
+	mb.mux.Unlock()
+}
+
+func (mb *MessageBroker) GetDatabase() *gorm.DB {
+	return mb.db
+}
+
+func (mb *MessageBroker) GetSyncChannel(userID uint) (chan stream.Conn, bool) {
+	val, ok := mb.websocketsByUserID[userID]
+	return val, ok
+}
+
+func (mb *MessageBroker) SetSyncChannel(userID uint, ch chan stream.Conn) {
+	mb.websocketsByUserID[userID] = ch
+}
+
+func (mb *MessageBroker) DeleteSyncChannel(userID uint) {
+	delete(mb.websocketsByUserID, userID)
+}
+
+func (mb *MessageBroker) CheckDuplicate(userID uint) bool {
+	_, ok := mb.clientByID[userID]
+	return ok
 }
 
 // loop : spawns appropriate go routines for every new payload along a broker channel
@@ -75,7 +111,7 @@ func (mb *MessageBroker) loop() {
 }
 
 // handleRemoveClient : removes client from broker structures, and cancels ctx
-func (mb *MessageBroker) handleRemoveClient(c Client) {
+func (mb *MessageBroker) handleRemoveClient(c stream.Client) {
 	mb.cancelByID[c.UserID()]()
 	delete(mb.cancelByID, c.UserID())
 	delete(mb.clientByID, c.UserID())
@@ -86,7 +122,7 @@ func (mb *MessageBroker) handleRemoveClient(c Client) {
 }
 
 // handleAddClient : creates client & child contexts, adds to broker structures
-func (mb *MessageBroker) handleAddClient(c Client) {
+func (mb *MessageBroker) handleAddClient(c stream.Client) {
 	ctx, cancel := context.WithCancel(mb.ctx) // TODO : should I keep this as context.WithCancel?
 	mb.clientByID[c.UserID()] = c
 	mb.cancelByID[c.UserID()] = cancel
@@ -97,10 +133,10 @@ func (mb *MessageBroker) handleAddClient(c Client) {
 
 // handleSendMessage : updates database, sends messages and notifications to
 // clients when the broker recieves a new message
-func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
+func (mb *MessageBroker) handleSendMessage(p stream.MessagePayload) {
 	// make a copy of shared data
-	clientsInRoom := make(map[uint]Client)
-	clientsConnected := make(map[uint]Client)
+	clientsInRoom := make(map[uint]stream.Client)
+	clientsConnected := make(map[uint]stream.Client)
 	for key, value := range mb.groupByRoomID[p.RoomID] {
 		clientsInRoom[key] = value
 	}
@@ -109,7 +145,7 @@ func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
 	}
 
 	// go routine to handle lag of network calls and database calls
-	go func(clientsConnected map[uint]Client, clientsInRoom map[uint]Client) {
+	go func(clientsConnected map[uint]stream.Client, clientsInRoom map[uint]stream.Client) {
 		belongToRoom := make(map[uint]bool)
 
 		model.InsertMessage(mb.db, p.Time, p.Body, p.UserID, p.RoomID)
@@ -128,7 +164,7 @@ func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
 		name := model.GetUserNameByID(mb.db, p.UserID)
 
 		// update p to be a notification type
-		message := MessageResponsePayload{
+		message := stream.MessageResponsePayload{
 			MessageType: "new_message",
 			UserName:    name,
 			UserID:      p.UserID,
@@ -145,7 +181,7 @@ func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
 			belongToRoom[cli.UserID()] = false
 		}
 		// update p to be a notification type
-		notification := MessageResponsePayload{
+		notification := stream.MessageResponsePayload{
 			MessageType: "notification",
 			RoomID:      p.RoomID,
 		}
@@ -163,7 +199,7 @@ func (mb *MessageBroker) handleSendMessage(p MessagePayload) {
 
 // handleSendAction : checks action type, spawns appropriate goroutine handler
 // NOTE: all action handler are in actionhandlers.go
-func (mb *MessageBroker) handleSendAction(p ActionPayload) {
+func (mb *MessageBroker) handleSendAction(p stream.ActionPayload) {
 	switch p.ActionType {
 	case "change_room":
 		mb.handleChangeRoom(p)
@@ -172,7 +208,7 @@ func (mb *MessageBroker) handleSendAction(p ActionPayload) {
 	case "join_room":
 		mb.handleJoinRoom(p)
 	case "create_user":
-		mb.handleCreateUser(p)
+		mb.HandleCreateUser(p)
 	case "create_room":
 		mb.handleCreateRoom(p)
 	}

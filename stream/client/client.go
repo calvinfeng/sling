@@ -6,13 +6,13 @@ Client interface allows communication with the MessageBroker, reads and writes
 to all clients based off of channel communication.
 ==============================================================================*/
 
-package handler
+package client
 
 import (
 	"context"
 	"encoding/json"
 	"fmt"
-
+	"github.com/calvinfeng/sling/stream"
 	"github.com/calvinfeng/sling/util"
 	"github.com/gorilla/websocket"
 
@@ -21,44 +21,48 @@ import (
 	"time"
 )
 
-type Client interface {
-	RoomID() uint
-	UserID() uint
-	MessageListen(*sync.WaitGroup)
-	ActionListen(*sync.WaitGroup)
-	Activate(ctx context.Context)
-	WriteMessageQueue() chan<- MessageResponsePayload
-	WriteActionQueue() chan<- ActionResponsePayload
-	SetSendAction(chan ActionPayload)
-	SetSendMessage(chan MessagePayload)
-	SetRoomID(uint)
-}
+// type Payload interface {
+// }
+
+// type Stream interface {
+// }
+
+// type ClientC interface {
+// 	RoomID() uint
+// 	UserID() uint
+// 	Listen(Stream)
+// 	Activate(ctx context.Context)
+// 	WritePayload() chan<- Payload
+// 	SetSend(Stream, chan Payload)
+// 	SetRoomID(uint)
+// 	StreamByID(Stream)
+// }
 
 type WebSocketClient struct {
 	roomID       uint
 	userID       uint
-	connMessage  *websocket.Conn
-	connAction   *websocket.Conn
-	readMessage  chan json.RawMessage        // read next message
-	writeMessage chan MessageResponsePayload // write to msg queue next
-	readAction   chan json.RawMessage        // read next message
-	writeAction  chan ActionResponsePayload  // write to msg queue next
-	sendMessage  chan MessagePayload
-	sendAction   chan ActionPayload
+	connMessage  stream.Conn
+	connAction   stream.Conn
+	readMessage  chan json.RawMessage               // read next message
+	writeMessage chan stream.MessageResponsePayload // write to msg queue next
+	readAction   chan json.RawMessage               // read next message
+	writeAction  chan stream.ActionResponsePayload  // write to msg queue next
+	sendMessage  chan stream.MessagePayload
+	sendAction   chan stream.ActionPayload
 }
 
-func newWebSocketClient(messageConn *websocket.Conn, actionConn *websocket.Conn, userID uint) Client {
+func NewWebSocketClient(messageConn stream.Conn, actionConn stream.Conn, userID uint) stream.Client {
 	return &WebSocketClient{
 		userID:       userID,
 		roomID:       0,
 		connMessage:  messageConn,
 		connAction:   actionConn,
-		readMessage:  make(chan json.RawMessage, 200),        // read next message
-		writeMessage: make(chan MessageResponsePayload, 200), // write to msg queue next
-		readAction:   make(chan json.RawMessage, 200),        // read next message
-		writeAction:  make(chan ActionResponsePayload, 200),  // write to msg queue next
-		sendMessage:  make(chan MessagePayload, 200),
-		sendAction:   make(chan ActionPayload, 200),
+		readMessage:  make(chan json.RawMessage, 200),               // read next message
+		writeMessage: make(chan stream.MessageResponsePayload, 200), // write to msg queue next
+		readAction:   make(chan json.RawMessage, 200),               // read next message
+		writeAction:  make(chan stream.ActionResponsePayload, 200),  // write to msg queue next
+		sendMessage:  make(chan stream.MessagePayload, 200),
+		sendAction:   make(chan stream.ActionPayload, 200),
 	}
 }
 
@@ -79,11 +83,12 @@ func (c *WebSocketClient) SetRoomID(roomID uint) {
 // MessageListen : continously checks for new messages along the websocket connection,
 // and forwards new messages along the proper channels
 func (c *WebSocketClient) MessageListen(wg *sync.WaitGroup) {
+
 	defer wg.Done()
 	defer util.LogInfo(fmt.Sprintf("client %d disconnected from messages websocket", c.UserID()))
 
 	for {
-		_, bytes, err := c.connMessage.ReadMessage()
+		bytes, err := c.connMessage.ReadMessage()
 
 		if err != nil &&
 			websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
@@ -102,10 +107,11 @@ func (c *WebSocketClient) MessageListen(wg *sync.WaitGroup) {
 // ActionListen : continously checks for new messages along the websocket connection,
 // and forwards new messages along the proper channels
 func (c *WebSocketClient) ActionListen(wg *sync.WaitGroup) {
+
 	defer wg.Done()
 	defer util.LogInfo(fmt.Sprintf("client %d disconnected from actions websocket", c.UserID()))
 	for {
-		_, bytes, err := c.connAction.ReadMessage()
+		bytes, err := c.connAction.ReadMessage()
 
 		if err != nil &&
 			websocket.IsCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway) {
@@ -130,22 +136,22 @@ func (c *WebSocketClient) Activate(ctx context.Context) {
 }
 
 // WriteMessageQueue : returns channel to write messages to
-func (c *WebSocketClient) WriteMessageQueue() chan<- MessageResponsePayload {
+func (c *WebSocketClient) WriteMessageQueue() chan<- stream.MessageResponsePayload {
 	return c.writeMessage
 }
 
 // WriteActionQueue : returns channel to write actions to
-func (c *WebSocketClient) WriteActionQueue() chan<- ActionResponsePayload {
+func (c *WebSocketClient) WriteActionQueue() chan<- stream.ActionResponsePayload {
 	return c.writeAction
 }
 
 // SetSendMessage : sets channel for sending messages to message broker
-func (c *WebSocketClient) SetSendMessage(ch chan MessagePayload) {
+func (c *WebSocketClient) SetSendMessage(ch chan stream.MessagePayload) {
 	c.sendMessage = ch
 }
 
 // SetSendAction : sets channel for sending actions to message broker
-func (c *WebSocketClient) SetSendAction(ch chan ActionPayload) {
+func (c *WebSocketClient) SetSendAction(ch chan stream.ActionPayload) {
 	c.sendAction = ch
 }
 
@@ -162,12 +168,12 @@ func (c *WebSocketClient) readMessageLoop(ctx context.Context) {
 		select {
 		case <-ctx.Done(): // read loop is closed
 			util.LogInfo(fmt.Sprintf("client %d has terminated read message loop", c.userID))
-			delete(broker.websocketsByUserID, c.UserID())
+			//delete(broker.websocketsByUserID, c.UserID()) //TODO
 			return
 
 		case bytes := <-c.readMessage: // read bytes detected in channel
 			c.connMessage.SetReadDeadline(time.Now().Add(2 * time.Second))
-			p := MessagePayload{}
+			p := stream.MessagePayload{}
 			util.LogInfo(string(bytes))
 
 			err := json.Unmarshal(bytes, &p) // converts json to payload
@@ -193,12 +199,12 @@ func (c *WebSocketClient) readActionLoop(ctx context.Context) {
 		select {
 		case <-ctx.Done(): // read loop is closed
 			util.LogInfo(fmt.Sprintf("client %d has terminated read action loop", c.userID))
-			delete(broker.websocketsByUserID, c.UserID())
+			//delete(broker.websocketsByUserID, c.UserID()) //TODO
 			return
 
 		case bytes := <-c.readAction: // read bytes detected in channel
 			c.connAction.SetReadDeadline(time.Now().Add(2 * time.Second))
-			p := ActionPayload{}
+			p := stream.ActionPayload{}
 			util.LogInfo(string(bytes))
 
 			err := json.Unmarshal(bytes, &p) // converts json to payload

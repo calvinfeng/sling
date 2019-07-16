@@ -5,11 +5,10 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/calvinfeng/sling/util"
-
-	"github.com/dgrijalva/jwt-go"
-
 	"github.com/calvinfeng/sling/model"
+	"github.com/calvinfeng/sling/stream"
+	"github.com/calvinfeng/sling/util"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
 	"github.com/lib/pq"
@@ -38,7 +37,7 @@ type (
 )
 
 // NewUserHandler returns a handler that creates a new user.
-func NewUserHandler(db *gorm.DB) echo.HandlerFunc {
+func NewUserHandler(db *gorm.DB, broker stream.Broker) echo.HandlerFunc {
 	return func(ctx echo.Context) error {
 
 		user := &model.User{}
@@ -89,8 +88,8 @@ func NewUserHandler(db *gorm.DB) echo.HandlerFunc {
 			return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 		}
 
-		payload := ActionPayload{UserID: user.ID}
-		broker.handleCreateUser(payload)
+		payload := stream.ActionPayload{UserID: user.ID}
+		broker.HandleCreateUser(payload)
 
 		return ctx.JSON(http.StatusCreated, user)
 	}

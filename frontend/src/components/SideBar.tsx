@@ -117,7 +117,7 @@ class SideBar extends Component<SideBarProps, SideBarState> {
             }
 
             return <li
-                className={`SBhoverable ${this.getClassName(room)}`}
+                className={`SBhoverable ${this.getClassName(room)} ${this.getClassName(room)}`}
                 key={room.id}
                 onClick={hasJoined ?
                     (e) => this.props.changeRoom(room) :
@@ -174,14 +174,14 @@ class SideBar extends Component<SideBarProps, SideBarState> {
                             {moreChannel}
                             {this.state.displayMoreChannel && (
                                 unjoinedChannels.length > 0 ?
-                                    <ul className="SBlist">{unjoinedChannels}</ul> :
+                                    <ul className="SBlist SBnewchannel">{unjoinedChannels}</ul> :
                                     <div className="SBnone">None</div>
                             )}
                         </div>
 
                         <label className="SBlabel">Direct Messages</label>
                         {userItems.length > 0 ?
-                            <ul className="SBlist">{userItems}</ul> :
+                            <ul className="SBlist SBdbuser">{userItems}</ul> :
                             <div className="SBnone">None</div>
                         }
                     </div>

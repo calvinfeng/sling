@@ -1,20 +1,57 @@
-/*==============================================================================
-payloads.go - Defines Payload Structures
-Summary: Defines payloads for channel communication ingoing and outgoing between
-the MessageBroker and WebsocketClient s
-==============================================================================*/
-
-package handler
+package stream
 
 import (
-	"time"
-
+	"context"
 	"github.com/calvinfeng/sling/model"
+	"github.com/gorilla/websocket"
+	"github.com/jinzhu/gorm"
+	"github.com/labstack/echo/v4"
+	"sync"
+	"time"
 )
+
+//Client communicates with the Broker and its Conn connections
+type Client interface {
+	RoomID() uint
+	UserID() uint
+	MessageListen(*sync.WaitGroup)
+	ActionListen(*sync.WaitGroup)
+	Activate(ctx context.Context)
+	WriteMessageQueue() chan<- MessageResponsePayload
+	WriteActionQueue() chan<- ActionResponsePayload
+	SetSendAction(chan ActionPayload)
+	SetSendMessage(chan MessagePayload)
+	SetRoomID(uint)
+}
+
+//Broker holds and manages all active client information
+type Broker interface {
+	SetSyncChannel(uint, chan Conn)
+	GetSyncChannel(uint) (chan Conn, bool)
+	HandleCreateUser(ActionPayload)
+	LockMux()
+	UnlockMux()
+	GetDatabase() *gorm.DB
+	AddClientQueue() chan Client
+	RemoveClientQueue() chan Client
+	CheckDuplicate(uint) bool
+	DeleteSyncChannel(uint)
+}
+
+//Conn wraps any connection capabilities for different connections
+type Conn interface {
+	ReadMessage() ([]byte, error)
+	WriteMessage(int, []byte) error
+	Close()
+	MakeConn(echo.Context, *websocket.Upgrader) error
+	SetReadDeadline(time.Time) error
+	SetWriteDeadline(time.Time) error
+	SetPongHandler(func(string) error)
+}
 
 /************* Client to MessageBroker payload Types ******************/
 
-// MessagePayload holds the message content to be communicated from the
+//  stream.MessagePayload holds the message content to be communicated from the
 // client frontend, to the server and message broker
 type MessagePayload struct {
 	UserID uint      `json:"userID"`
