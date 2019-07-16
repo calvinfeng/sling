@@ -44,9 +44,9 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     async initialize() {
         let token = localStorage.getItem('jwt_token')
         if (!token || token.length === 0) {
-            this.handleLogOut()
+            throw "no token found"
         }
-
+        
         await this.props.authenticate(token!)
         await this.props.onLoadUsers(token!)
         await this.props.onLoadRooms(token!)

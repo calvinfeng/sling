@@ -44,6 +44,7 @@ export default function rooms(state = initial, action: RoomAction): RoomStoreSta
                 data: newData
             })
         case CHANGE_ROOM:
+            action.room.hasNotification = false
             return Object.assign({}, state, {
                 current: action.room
             })

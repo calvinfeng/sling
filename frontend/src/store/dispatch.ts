@@ -10,24 +10,24 @@ import { AppState } from '.';
 
 export const dispatchActions = (dispatch: ThunkDispatch<AppState, undefined, AppActionTypes>) => {
     return {
-        onLogIn: (username: string, password: string) => {
-            dispatch(authActions.logIn(username, password))
+        onLogIn: async (username: string, password: string) => {
+            await dispatch(authActions.logIn(username, password))
         },
         onLogOut: () => {
             dispatch(authActions.logOut())
         },
-        authenticate: (token: string) => {
-            dispatch(authActions.getCurrentUser(token))
+        authenticate: async (token: string) => {
+            await dispatch(authActions.getCurrentUser(token))
         },
 
         onLoadMessages: (messages: Message[]) => {
             dispatch(msgActions.loadMessages(messages))
         },
-        onLoadRooms: (token: string) => {
-            dispatch(roomActions.loadRooms(token))
+        onLoadRooms: async (token: string) => {
+            await dispatch(roomActions.loadRooms(token))
         },
-        onLoadUsers: (token: string) => {
-            dispatch(userActions.loadUsers(token))
+        onLoadUsers: async (token: string) => {
+            await dispatch(userActions.loadUsers(token))
         },
 
         onNewMessage: (message: Message) => {

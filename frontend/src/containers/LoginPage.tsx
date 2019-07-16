@@ -35,11 +35,11 @@ type OwnProps = {
 
 const mapDispatchToProps = (dispatch: ThunkDispatch<AppState, undefined, AppActionTypes>, ownProps: OwnProps) => {
     return {
-        onLogIn: (username: string, password: string) => {
-            dispatch(logIn(username, password))
+        onLogIn: async (username: string, password: string) => {
+            await dispatch(logIn(username, password))
         },
-        onRegister: (username: string, password: string, email: string) => {
-            dispatch(register(username, password, email))
+        onRegister: async (username: string, password: string, email: string) => {
+            await dispatch(register(username, password, email))
         },
         setLoggedIn: ownProps.setLoggedIn
     }

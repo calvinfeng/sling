@@ -1,15 +1,11 @@
 import { User } from '../../types'
 import {
-    LOG_IN,
-    LOG_OUT,
     START_AUTH_LOADING,
     STOP_AUTH_LOADING,
     FAIL_AUTH_LOADING,
     SET_USER,
-    GET_CURRENT_USER,
     CLEAR_USER,
-    AuthAction,
-    AuthStoreState
+    AuthAction
 } from '.'
 import { ThunkDispatch } from 'redux-thunk'
 import axios, { AxiosResponse } from 'axios'
