@@ -8,6 +8,9 @@ import (
 	"os"
 
 	"github.com/calvinfeng/sling/handler"
+	//"github.com/calvinfeng/sling/stream"
+	"github.com/calvinfeng/sling/stream/broker"
+	//"github.com/calvinfeng/sling/stream/broker"
 	"github.com/gorilla/websocket"
 	"github.com/jinzhu/gorm"
 	"github.com/labstack/echo/v4"
@@ -31,7 +34,7 @@ func runServer(cmd *cobra.Command, args []string) error {
 		log.Fatalf("failed to open DB conn: %s", err.Error())
 	}
 
-	setupBroker(conn)
+	broker := broker.SetupBroker(context.Background(), conn)
 
 	srv := echo.New()
 
@@ -45,13 +48,10 @@ func runServer(cmd *cobra.Command, args []string) error {
 		AllowMethods: []string{http.MethodGet, http.MethodPut, http.MethodPost, http.MethodDelete},
 	}))
 
-	// srv.File("/", "public/index.html")
-	// srv.Static("/assets", "public/assets")
-
 	srv.File("/", "./frontend/build/index.html")
 	srv.Static("/static", "./frontend/build/static")
 
-	srv.POST("/api/register", handler.NewUserHandler(conn))
+	srv.POST("/api/register", handler.NewUserHandler(conn, broker))
 	srv.POST("/api/login", handler.LoginHandler(conn))
 
 	users := srv.Group("api/users")
@@ -61,8 +61,8 @@ func runServer(cmd *cobra.Command, args []string) error {
 
 	srv.GET("/api/rooms", handler.GetRoomsHandler(conn), handler.NewTokenAuthMiddleware(conn))
 
-	messageStreamHandler := handler.GetMessageStreamHandler(&websocket.Upgrader{})
-	actionStreamHandler := handler.GetActionStreamHandler(&websocket.Upgrader{})
+	messageStreamHandler := handler.GetMessageStreamHandler(&websocket.Upgrader{}, broker)
+	actionStreamHandler := handler.GetActionStreamHandler(&websocket.Upgrader{}, broker)
 
 	streams := srv.Group("api/stream")
 
@@ -75,8 +75,4 @@ func runServer(cmd *cobra.Command, args []string) error {
 	}
 
 	return nil
-}
-
-func setupBroker(conn *gorm.DB) {
-	handler.RunBroker(context.Background(), conn)
 }
