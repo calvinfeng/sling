@@ -1,7 +1,6 @@
 import { Room } from '../../types'
 
 export const NEW_ROOM = 'NEW_ROOM'
-export const LOAD_ROOMS = 'LOAD_ROOMS'
 export const CHANGE_ROOM = 'CHANGE_ROOM'
 export const SET_ROOMS = 'SET_ROOMS'
 export const MARK_UNREAD = 'MARK_UNREAD'
@@ -33,11 +32,6 @@ type NewRoomAction = {
     room: Room
 }
 
-type LoadRoomsAction = {
-    type: typeof LOAD_ROOMS,
-    token: string
-}
-
 type SetRoomsAction = {
     type: typeof SET_ROOMS
     rooms: Room[]
@@ -59,7 +53,6 @@ type JoinRoomAction = {
 }
 
 export type RoomAction = NewRoomAction |
-    LoadRoomsAction |
     ChangeRoomAction |
     MarkUnreadAction |
     JoinRoomAction | 

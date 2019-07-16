@@ -1,13 +1,11 @@
 import { Room } from '../../types'
 import {
     NEW_ROOM,
-    LOAD_ROOMS,
     SET_ROOMS,
     CHANGE_ROOM,
     MARK_UNREAD,
     JOIN_ROOM,
     RoomAction,
-    RoomStoreState,
     START_ROOM_LOADING,
     STOP_ROOM_LOADING,
     FAIL_ROOM_LOADING

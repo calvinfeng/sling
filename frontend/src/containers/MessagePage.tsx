@@ -1,13 +1,12 @@
 import * as React from 'react';
 import { connect } from 'react-redux'
-import axios, { AxiosResponse } from 'axios'
 
 import SideBar from '../components/message/SideBar';
 import DisplayWindow from '../components/message/DisplayWindow';
 import InputBox from '../components/message/InputBox';
 
 import { AppState } from '../store'
-import { User, Room, Message } from '../types'
+import { User, Room } from '../types'
 import { dispatchActions } from '../store/dispatch'
 
 import './MessagePage.scss';
@@ -44,9 +43,9 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     async initialize() {
         let token = localStorage.getItem('jwt_token')
         if (!token || token.length === 0) {
-            throw "no token found"
+            throw new Error("no token found")
         }
-        
+
         await this.props.authenticate(token!)
         await this.props.onLoadUsers(token!)
         await this.props.onLoadRooms(token!)

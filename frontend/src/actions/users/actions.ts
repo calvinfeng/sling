@@ -1,10 +1,8 @@
 import { User } from '../../types'
 import {
     NEW_USER,
-    LOAD_USERS,
     SET_USERS,
     UserAction,
-    UserStoreState,
     START_USER_LOADING,
     FAIL_USER_LOADING,
     STOP_USER_LOADING

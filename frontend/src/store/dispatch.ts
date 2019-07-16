@@ -1,4 +1,3 @@
-import { Dispatch } from 'react'
 import { AppActionTypes } from '../actions/types'
 import * as msgActions from '../actions/messages/actions'
 import * as roomActions from '../actions/rooms/actions'

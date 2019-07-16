@@ -1,5 +1,11 @@
 import {
-    AuthStoreState, AuthAction, START_AUTH_LOADING, STOP_AUTH_LOADING, FAIL_AUTH_LOADING, SET_USER, CLEAR_USER
+    AuthStoreState,
+    AuthAction,
+    START_AUTH_LOADING,
+    STOP_AUTH_LOADING,
+    FAIL_AUTH_LOADING,
+    SET_USER,
+    CLEAR_USER
 } from '../../actions/auth'
 
 const initial: AuthStoreState = {

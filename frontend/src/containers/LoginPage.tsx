@@ -1,12 +1,10 @@
-import React, { Component, FormEvent, Dispatch } from 'react';
+import React, { Component, FormEvent } from 'react';
 import { connect } from 'react-redux'
-import axios, { AxiosResponse } from 'axios'
 import {
     Container,
     TextField,
     Button
 } from '@material-ui/core'
-import { User } from '../types'
 import { logIn, register } from '../actions/auth/actions'
 import { AppActionTypes } from '../actions/types'
 import { ThunkDispatch } from 'redux-thunk'

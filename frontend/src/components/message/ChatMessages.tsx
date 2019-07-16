@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Component } from 'react';
-import { Message, Room } from '../../types';
+import { Message } from '../../types';
 import './styles.scss';
 
 import moment from 'moment';

@@ -6,8 +6,6 @@ import {
     CLEAR_MESSAGES
 } from '../../actions/messages'
 
-import { Message } from '../../types'
-
 const initial: MessageStoreState = {
     loading: false,
     data: [],

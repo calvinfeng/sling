@@ -1,6 +1,5 @@
 import {
     NEW_USER,
-    LOAD_USERS,
     UserAction,
     UserStoreState,
     CLEAR_USERS,
@@ -9,8 +8,6 @@ import {
     STOP_USER_LOADING,
     FAIL_USER_LOADING
 } from '../../actions/users'
-
-import { User } from '../../types'
 
 const initial: UserStoreState = {
     loading: false,
