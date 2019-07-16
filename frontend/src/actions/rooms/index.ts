@@ -3,6 +3,7 @@ import { Room } from '../../types'
 export const NEW_ROOM = 'NEW_ROOM'
 export const LOAD_ROOMS = 'LOAD_ROOMS'
 export const CHANGE_ROOM = 'CHANGE_ROOM'
+export const SET_ROOMS = 'SET_ROOMS'
 export const MARK_UNREAD = 'MARK_UNREAD'
 export const JOIN_ROOM = 'JOIN_ROOM'
 export const CLEAR_ROOMS = 'CLEAR_ROOMS'
@@ -33,7 +34,12 @@ type NewRoomAction = {
 }
 
 type LoadRoomsAction = {
-    type: typeof LOAD_ROOMS
+    type: typeof LOAD_ROOMS,
+    token: string
+}
+
+type SetRoomsAction = {
+    type: typeof SET_ROOMS
     rooms: Room[]
 }
 
@@ -60,7 +66,8 @@ export type RoomAction = NewRoomAction |
     ClearRoomsAction | 
     StartRoomLoadingAction | 
     StopRoomLoadingAction | 
-    FailRoomLoadingAction
+    FailRoomLoadingAction | 
+    SetRoomsAction
 
 export type RoomStoreState = {
     loading: boolean

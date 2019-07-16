@@ -7,6 +7,7 @@ export const CLEAR_USER = 'CLEAR_USER'
 export const START_AUTH_LOADING = 'START_AUTH_LOADING'
 export const STOP_AUTH_LOADING = 'STOP_AUTH_LOADING'
 export const FAIL_AUTH_LOADING = 'FAIL_AUTH_LOADING'
+export const GET_CURRENT_USER = 'GET_CURRENT_USER'
 
 type StartAuthLoadingAction = {
     type: typeof START_AUTH_LOADING
@@ -40,16 +41,22 @@ type ClearUserAction = {
     type: typeof CLEAR_USER
 }
 
+type GetCurrentUserAction = {
+    type: typeof GET_CURRENT_USER
+    token: string
+}
+
 export type AuthAction = LogInAction |
     LogOutAction | 
     StartAuthLoadingAction | 
     StopAuthLoadingAction | 
     FailAuthLoadingAction | 
     SetUserAction | 
-    ClearUserAction
+    ClearUserAction | 
+    GetCurrentUserAction
 
 export type AuthStoreState = {
     loading: boolean
-    user: User
+    user: User | null
     error: string
 }

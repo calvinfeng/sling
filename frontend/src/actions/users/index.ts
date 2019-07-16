@@ -2,6 +2,7 @@ import { User } from '../../types'
 
 export const NEW_USER = 'NEW_USER'
 export const LOAD_USERS = 'LOAD_USERS'
+export const SET_USERS = 'SET_USERS'
 export const CLEAR_USERS = 'CLEAR_USERS'
 export const START_USER_LOADING = 'START_USER_LOADING'
 export const STOP_USER_LOADING = 'STOP_USER_LOADING'
@@ -12,9 +13,14 @@ type NewUserAction = {
     user: User
 }
 
+type SetUsersAction = {
+    type: typeof SET_USERS
+    users: User[]
+}
+
 type LoadUsersAction = {
     type: typeof LOAD_USERS
-    users: User[]
+    token: string
 }
 
 type ClearUsersAction = {
@@ -39,7 +45,8 @@ export type UserAction = NewUserAction |
     ClearUsersAction | 
     StartUserLoadingAction | 
     StopUserLoadingAction |
-    FailUserLoadingAction
+    FailUserLoadingAction | 
+    SetUsersAction
 
 export type UserStoreState = {
     loading: boolean

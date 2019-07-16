@@ -1,24 +1,33 @@
 import {
-    LOG_OUT,
     NEW_MESSAGE,
     LOAD_MESSAGES,
-    CHANGE_ROOM,
-    JOIN_ROOM,
-    AppActionTypes
-} from '../../actions/types'
+    MessageStoreState,
+    MessageAction,
+    CLEAR_MESSAGES
+} from '../../actions/messages'
 
 import { Message } from '../../types'
 
-export default function messages(state: Message[] = [], action: AppActionTypes) {
+const initial: MessageStoreState = {
+    loading: false,
+    data: [],
+    error: ''
+}
+
+export default function messages(state = initial, action: MessageAction): MessageStoreState {
     switch (action.type) {
-        case LOG_OUT:
-        case CHANGE_ROOM:
-        case JOIN_ROOM:
-            return []
+        case CLEAR_MESSAGES:
+            return initial
         case NEW_MESSAGE:
-            return state.concat(action.message)
+            return Object.assign({}, state, {
+                data: [...state.data, action.message],
+                error: ''
+            })
         case LOAD_MESSAGES:
-            return action.messages
+            return Object.assign({}, state, {
+                data: action.messages,
+                error: ''
+            })
         default:
             return state
     }

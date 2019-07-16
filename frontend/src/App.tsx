@@ -6,9 +6,11 @@ import MessagePage from './containers/MessagePage'
 import { Provider } from 'react-redux';
 import { applyMiddleware, createStore } from 'redux';
 import { rootReducer } from './store';
+import thunk from 'redux-thunk'
 import logger from 'redux-logger';
 
-const store = createStore(rootReducer, applyMiddleware(logger))
+const createStoreWithMiddleware = applyMiddleware(thunk, logger)(createStore)
+const store = createStoreWithMiddleware(rootReducer)
 
 const initialState = {
   loggedIn: false
@@ -35,6 +37,7 @@ class App extends React.Component<{}, AppState> {
   }
 
   render() {
+    console.log(this.state)
     return (
       <Provider store={store}>
         <div className="App">

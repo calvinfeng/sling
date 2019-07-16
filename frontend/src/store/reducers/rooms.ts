@@ -1,11 +1,14 @@
 import {
-    LOG_OUT,
     NEW_ROOM,
-    LOAD_ROOMS,
+    CLEAR_ROOMS,
     MARK_UNREAD,
+    SET_ROOMS,
     CHANGE_ROOM,
     RoomAction,
-    RoomStoreState
+    RoomStoreState,
+    START_ROOM_LOADING,
+    STOP_ROOM_LOADING,
+    FAIL_ROOM_LOADING
 } from '../../actions/rooms'
 import { Room } from '../../types'
 
@@ -18,14 +21,14 @@ const initial: RoomStoreState = {
 
 export default function rooms(state = initial, action: RoomAction): RoomStoreState {
     switch (action.type) {
-        case LOG_OUT:
+        case CLEAR_ROOMS:
             return initial
         case NEW_ROOM:
             return Object.assign({}, state, {
                 data: [...state.data, action.room],
                 error: ''
             })
-        case LOAD_ROOMS:
+        case SET_ROOMS:
             return Object.assign({}, state, {
                 data: action.rooms,
                 error: ''
@@ -43,6 +46,18 @@ export default function rooms(state = initial, action: RoomAction): RoomStoreSta
         case CHANGE_ROOM:
             return Object.assign({}, state, {
                 current: action.room
+            })
+        case START_ROOM_LOADING:
+            return Object.assign({}, state, {
+                loading: true
+            })
+        case STOP_ROOM_LOADING:
+            return Object.assign({}, state, {
+                loading: false
+            })
+        case FAIL_ROOM_LOADING:
+            return Object.assign({}, state, {
+                error: action.message
             })
         default:
             return state

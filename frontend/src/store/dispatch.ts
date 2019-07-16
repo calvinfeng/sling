@@ -5,24 +5,29 @@ import * as roomActions from '../actions/rooms/actions'
 import * as userActions from '../actions/users/actions'
 import * as authActions from '../actions/auth/actions'
 import { User, Message, Room } from '../types'
+import { ThunkDispatch } from 'redux-thunk';
+import { AppState } from '.';
 
-export const dispatchActions = (dispatch: Dispatch<AppActionTypes>) => {
+export const dispatchActions = (dispatch: ThunkDispatch<AppState, undefined, AppActionTypes>) => {
     return {
-        onLogIn: (user: User) => {
-            dispatch(authActions.logIn(user))
+        onLogIn: (username: string, password: string) => {
+            dispatch(authActions.logIn(username, password))
         },
         onLogOut: () => {
             dispatch(authActions.logOut())
+        },
+        authenticate: (token: string) => {
+            dispatch(authActions.getCurrentUser(token))
         },
 
         onLoadMessages: (messages: Message[]) => {
             dispatch(msgActions.loadMessages(messages))
         },
-        onLoadRooms: (rooms: Room[]) => {
-            dispatch(roomActions.loadRooms(rooms))
+        onLoadRooms: (token: string) => {
+            dispatch(roomActions.loadRooms(token))
         },
-        onLoadUsers: (users: User[]) => {
-            dispatch(userActions.loadUsers(users))
+        onLoadUsers: (token: string) => {
+            dispatch(userActions.loadUsers(token))
         },
 
         onNewMessage: (message: Message) => {

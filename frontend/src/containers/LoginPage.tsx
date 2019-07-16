@@ -7,8 +7,10 @@ import {
     Button
 } from '@material-ui/core'
 import { User } from '../types'
-import { logIn } from '../actions/auth/actions'
+import { logIn, register } from '../actions/auth/actions'
 import { AppActionTypes } from '../actions/types'
+import { ThunkDispatch } from 'redux-thunk'
+import { AppState } from '../store';
 
 const initialState = {
     login: true,
@@ -31,10 +33,13 @@ type OwnProps = {
     setLoggedIn: Function
 }
 
-const mapDispatchToProps = (dispatch: Dispatch<AppActionTypes>, ownProps: OwnProps) => {
+const mapDispatchToProps = (dispatch: ThunkDispatch<AppState, undefined, AppActionTypes>, ownProps: OwnProps) => {
     return {
-        onLogIn: (user: User) => {
-            dispatch(logIn(user))
+        onLogIn: (username: string, password: string) => {
+            dispatch(logIn(username, password))
+        },
+        onRegister: (username: string, password: string, email: string) => {
+            dispatch(register(username, password, email))
         },
         setLoggedIn: ownProps.setLoggedIn
     }
@@ -59,9 +64,17 @@ class Login extends Component<Props, LoginState> {
 
         this.setState({ error: '', loading: true })
         if (this.state.login) {
-            this.tryLogin()
+            this.tryLogin().then(() => {
+                this.props.setLoggedIn()
+            }).catch(err => {
+                this.setState({ error: err })
+            })
         } else {
-            this.tryRegister()
+            this.tryRegister().then(() => {
+                this.props.setLoggedIn()
+            }).catch(err => {
+                this.setState({ error: err })
+            })
         }
     }
 
@@ -88,44 +101,12 @@ class Login extends Component<Props, LoginState> {
         this.setState({ login: !this.state.login })
     }
 
-    tryLogin() {
-        axios.post("api/login", {
-            name: this.state.username,
-            password: this.state.password
-        }).then((res: AxiosResponse) => {
-            this.handleLogIn(res.data)
-        }).catch((err) => {
-            console.log(err)
-            this.setState({ error: 'Invalid username or password.', password: '' })
-        }).finally(() => {
-            this.setState({ loading: false })
-        })
+    async tryLogin() {
+        await this.props.onLogIn(this.state.username, this.state.password)
     }
 
-    tryRegister() {
-        axios.post("api/register", {
-            name: this.state.username,
-            email: this.state.email,
-            password: this.state.password
-        }).then((res: AxiosResponse) => {
-            this.handleLogIn(res.data)
-        }).catch((err) => {
-            console.log(err)
-            this.setState({ error: 'Invalid credentials.' })
-        }).finally(() => {
-            this.setState({ loading: false })
-        })
-    }
-
-    handleLogIn(data: AxiosResponse['data']) {
-        localStorage.setItem('jwt_token', data.jwt_token)
-        let user: User = {
-            id: data.id,
-            username: data.name,
-            jwtToken: data.jwt_token
-        }
-        this.props.onLogIn(user)
-        this.props.setLoggedIn()
+    async tryRegister() {
+        await this.props.onRegister(this.state.username, this.state.password, this.state.email)
     }
 
     render() {

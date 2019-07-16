@@ -41,61 +41,19 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     readonly state: MessagePageState = initialState
     private messagesEnd = React.createRef<HTMLDivElement>()
 
-    componentDidMount() {
+    async initialize() {
         let token = localStorage.getItem('jwt_token')
         if (!token || token.length === 0) {
             this.handleLogOut()
         }
 
-        // Get current user from token
-        let curUserPromise = axios.get('api/users/current', {
-            headers: { 'Token': token }
-        }).then((res: AxiosResponse) => {
-            let user: User = {
-                id: res.data.id,
-                username: res.data.name,
-                jwtToken: res.data.jwt_token
-            }
-            this.props.onLogIn(user)
-        })
+        await this.props.authenticate(token!)
+        await this.props.onLoadUsers(token!)
+        await this.props.onLoadRooms(token!)
+    }
 
-        // Fetch users
-        let usersPromise = axios.get('api/users/', {
-            headers: {
-                'Token': token
-            }
-        }).then((res: AxiosResponse) => {
-            this.props.onLoadUsers(res.data.map((user: any): User => ({
-                username: user.name,
-                id: user.id,
-                jwtToken: null // can't get other peoples' tokens
-            })))
-        })
-
-        // Fetch rooms
-        let roomsPromise = axios.get('api/rooms', {
-            headers: {
-                'Token': token
-            }
-        }).then((res: AxiosResponse) => {
-            this.props.onLoadRooms(res.data.map((room: any): Room => ({
-                id: room.id,
-                name: room.name,
-                hasJoined: room.hasJoined,
-                hasNotification: room.hasNotification,
-                isDM: room.type === 1
-            })))
-        })
-
-        Promise.all([curUserPromise, usersPromise, roomsPromise]).catch((err) => {
-            console.log(err)
-
-            // Force user back to login page
-            this.handleLogOut()
-        }).finally(() => {
-            console.log(this.state)
-            this.setState({ loading: false })
-            // // Set up websocket handlers
+    componentDidMount() {
+        this.initialize().then(() => {
             this.msgWebsocket = new WebSocket("ws://localhost:8888/api/stream/messages")
             this.actWebsocket = new WebSocket("ws://localhost:8888/api/stream/actions")
 
@@ -107,6 +65,12 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             this.actWebsocket.onclose = this.handleActWebsocketClose
             this.actWebsocket.onerror = this.handleActWebsocketError
             this.actWebsocket.onmessage = this.handleActWebsocketMessage
+        }).catch(err => {
+            console.log(err)
+            this.handleLogOut()
+        }).finally(() => {
+            console.log(this.state)
+            this.setState({ loading: false })
         })
     }
 
@@ -127,8 +91,8 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     }
 
     handleMsgWebsocketOpen = (ev: Event) => {
-        if (this.props.curUser != null) {
-            var token = this.props.curUser.jwtToken
+        if (this.props.auth.user != null) {
+            var token = this.props.auth.user.jwtToken
             this.msgWebsocket.send(JSON.stringify({ jwt_token: token }));
         }
         else {
@@ -170,8 +134,8 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     }
 
     handleActWebsocketOpen = (ev: Event) => {
-        if (this.props.curUser != null) {
-            var token = this.props.curUser.jwtToken
+        if (this.props.auth.user != null) {
+            var token = this.props.auth.user.jwtToken
             this.actWebsocket.send(JSON.stringify({ jwt_token: token }));
         }
         else {
@@ -225,7 +189,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                 isDM: true,
             }
             this.props.onNewRoom(newRoom)
-            if (this.props.curUser !== null && actResponsePayload.userID === this.props.curUser.id) {
+            if (this.props.auth.user !== null && actResponsePayload.userID === this.props.auth.user.id) {
                 this.props.onChangeRoom(newRoom)
             }
         } else if (actResponsePayload.actionType === "new_user") {
@@ -247,7 +211,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             this.props.onNewRoom({
                 id: actResponsePayload.roomID,
                 name: actResponsePayload.roomName,
-                hasJoined: actResponsePayload.userID === this.props.curUser!.id,
+                hasJoined: actResponsePayload.userID === this.props.auth.user!.id,
                 hasNotification: false,
                 isDM: false,
             })
@@ -263,15 +227,15 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             return
         }
 
-        if (this.props.curRoom == null || this.props.curRoom.id === null ||
-            this.props.curUser === null || this.props.curUser.id === null) {
+        if (this.props.rooms.current == null || this.props.rooms.current.id === null ||
+            this.props.auth.user === null || this.props.auth.user.id === null) {
             console.log("invalid message sent, with null input")
             return
         }
         var messagePayload = {
             messageType: "message",
-            userID: this.props.curUser.id,
-            roomID: this.props.curRoom.id,
+            userID: this.props.auth.user.id,
+            roomID: this.props.rooms.current.id,
             time: (new Date()),
             body: body,
         }
@@ -281,23 +245,23 @@ class MessagePage extends React.Component<Props, MessagePageState> {
 
     changeRoom(nextRoom: Room) {
         console.log("room changed")
-        if (this.props.curUser === null) {
+        if (this.props.auth.user === null) {
             console.log("change room failed- something is null")
-            console.log(this.props.curRoom, this.props.curUser)
+            console.log(this.props.rooms.current, this.props.auth.user)
             return
         }
 
         let curRoomID = 0
-        if (this.props.curRoom) {
-            if (nextRoom.id === this.props.curRoom.id) {
+        if (this.props.rooms.current) {
+            if (nextRoom.id === this.props.rooms.current.id) {
                 return
             }
-            curRoomID = this.props.curRoom.id
+            curRoomID = this.props.rooms.current.id
         }
 
         var actionPayload = {
             actionType: "change_room",
-            userID: this.props.curUser.id,
+            userID: this.props.auth.user.id,
             roomID: curRoomID,
             newRoomID: nextRoom.id,
             dmUserID: 0,
@@ -312,14 +276,14 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     createRoom(name: string) {
         console.log(`trying to create room ${name}`)
 
-        if (this.props.curUser === null) {
+        if (this.props.auth.user === null) {
             console.log("curUser is null")
             return
         }
 
         let actionPayload = {
             actionType: "create_room",
-            userID: this.props.curUser.id,
+            userID: this.props.auth.user.id,
             roomID: 0,
             newRoomID: 0,
             dmUserID: 0,
@@ -332,7 +296,7 @@ class MessagePage extends React.Component<Props, MessagePageState> {
     startDM(user: User) {
         console.log("creating direct message room: ", user)
 
-        if (this.props.curUser === null) {
+        if (this.props.auth.user === null) {
             console.log("curUser is null")
             return
         }
@@ -343,8 +307,8 @@ class MessagePage extends React.Component<Props, MessagePageState> {
 
         var actionPayload = {
             actionType: "create_dm",
-            userID: this.props.curUser.id,
-            roomID: this.props.curRoom ? this.props.curRoom.id : 0,
+            userID: this.props.auth.user.id,
+            roomID: this.props.rooms.current ? this.props.rooms.current.id : 0,
             newRoomID: 0,
             dmUserID: user.id,
             newRoomName: ""
@@ -358,21 +322,21 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             return
         }
 
-        if (this.props.curUser === null) {
+        if (this.props.auth.user === null) {
             console.log("curUser is null")
             return
         }
         let curRoomID = 0
-        if (this.props.curRoom) {
-            if (nextRoom.id === this.props.curRoom.id) {
+        if (this.props.rooms.current) {
+            if (nextRoom.id === this.props.rooms.current.id) {
                 return
             }
-            curRoomID = this.props.curRoom.id
+            curRoomID = this.props.rooms.current.id
         }
 
         var actionPayload = {
             actionType: "join_room",
-            userID: this.props.curUser.id,
+            userID: this.props.auth.user.id,
             roomID: curRoomID,
             newRoomID: nextRoom.id,
             dmUserID: 0,
@@ -393,10 +357,10 @@ class MessagePage extends React.Component<Props, MessagePageState> {
             <div className="App">
                 <div className="left-div">
                     <SideBar
-                        curUser={this.props.curUser!}
-                        curRoom={this.props.curRoom}
-                        rooms={this.props.rooms}
-                        users={this.props.users}
+                        curUser={this.props.auth.user!}
+                        curRoom={this.props.rooms.current}
+                        rooms={this.props.rooms.data}
+                        users={this.props.users.data}
 
                         logOut={() => {
                             this.handleLogOut()
@@ -414,15 +378,15 @@ class MessagePage extends React.Component<Props, MessagePageState> {
                 <div className="right-div">
                     <div className="messages">
                         <DisplayWindow
-                            curRoom={this.props.curRoom!}
-                            messages={this.props.messages}
+                            curRoom={this.props.rooms.current!}
+                            messages={this.props.messages.data}
                         />
                         <div style={{ float: "left", clear: "both" }} ref={this.messagesEnd}></div>
                     </div>
                     <div className="inputs">
                         <InputBox
                             sendMessage={(body: String) => this.sendMessage(body)}
-                            enabled={this.props.curRoom !== null}
+                            enabled={this.props.rooms.current !== null}
                         />
                     </div>
                 </div>
