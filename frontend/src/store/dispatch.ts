@@ -1,45 +1,52 @@
-import { Dispatch } from 'react'
 import { AppActionTypes } from '../actions/types'
-import * as actions from '../actions'
+import * as msgActions from '../actions/messages/actions'
+import * as roomActions from '../actions/rooms/actions'
+import * as userActions from '../actions/users/actions'
+import * as authActions from '../actions/auth/actions'
 import { User, Message, Room } from '../types'
+import { ThunkDispatch } from 'redux-thunk';
+import { AppState } from '.';
 
-export const dispatchActions = (dispatch: Dispatch<AppActionTypes>) => {
+export const dispatchActions = (dispatch: ThunkDispatch<AppState, undefined, AppActionTypes>) => {
     return {
-        onLogIn: (user: User) => {
-            dispatch(actions.logIn(user))
+        onLogIn: async (username: string, password: string) => {
+            await dispatch(authActions.logIn(username, password))
         },
         onLogOut: () => {
-            dispatch(actions.logOut())
+            dispatch(authActions.logOut())
+        },
+        authenticate: async (token: string) => {
+            await dispatch(authActions.getCurrentUser(token))
         },
 
         onLoadMessages: (messages: Message[]) => {
-            dispatch(actions.loadMessages(messages))
+            dispatch(msgActions.loadMessages(messages))
         },
-        onLoadRooms: (rooms: Room[]) => {
-            dispatch(actions.loadRooms(rooms))
+        onLoadRooms: async (token: string) => {
+            await dispatch(roomActions.loadRooms(token))
         },
-        onLoadUsers: (users: User[]) => {
-            dispatch(actions.loadUsers(users))
+        onLoadUsers: async (token: string) => {
+            await dispatch(userActions.loadUsers(token))
         },
 
         onNewMessage: (message: Message) => {
-            dispatch(actions.newMessage(message))
+            dispatch(msgActions.newMessage(message))
         },
         onNewRoom: (room: Room) => {
-            dispatch(actions.newRoom(room))
+            dispatch(roomActions.newRoom(room))
         },
         onNewUser: (user: User) => {
-            dispatch(actions.newUser(user))
+            dispatch(userActions.newUser(user))
         },
 
         onMarkUnread: (roomID: number) => {
-            dispatch(actions.markUnread(roomID))
+            dispatch(roomActions.markUnread(roomID))
         },
         onJoinRoom: (room: Room) => {
-            dispatch(actions.joinRoom(room))
+            dispatch(roomActions.joinRoom(room))
         },
         onChangeRoom: (room: Room) => {
-            dispatch(actions.changeRoom(room))
+            dispatch(roomActions.changeRoom(room))
         },
     }
 }

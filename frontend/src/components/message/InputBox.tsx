@@ -1,5 +1,5 @@
 import * as React from 'react';
-import './component.css';
+import './styles.scss';
 import {
     TextField,
     IconButton,
