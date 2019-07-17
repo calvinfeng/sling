@@ -6,25 +6,26 @@ Summary: includes all handlers for actions change_room, send_message, create_dm,
 ==============================================================================*/
 //NOTE: all database commands are not completed, and are marked with "DATABASE"
 
-package handler
+package broker
 
 import (
 	"github.com/calvinfeng/sling/model"
+	"github.com/calvinfeng/sling/stream"
 	"github.com/calvinfeng/sling/util"
 	"github.com/jinzhu/gorm"
 )
 
-func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
+func (mb *MessageBroker) handleChangeRoom(p stream.ActionPayload) {
 	// update group by room id CONSIDER: ordering of this update and the database
 	cli := mb.clientByID[p.UserID]
 	cli.SetRoomID(p.NewRoomID)
 	if mb.groupByRoomID[p.NewRoomID] == nil {
-		mb.groupByRoomID[p.NewRoomID] = make(map[uint]Client)
+		mb.groupByRoomID[p.NewRoomID] = make(map[uint]stream.Client)
 	}
 	delete(mb.groupByRoomID[p.RoomID], p.UserID)
 	mb.groupByRoomID[p.NewRoomID][p.UserID] = cli
 
-	go func(db *gorm.DB, p ActionPayload, cli Client) {
+	go func(db *gorm.DB, p stream.ActionPayload, cli stream.Client) {
 		err := model.UpdateNotificationStatus(db, p.NewRoomID, p.UserID, false)
 		if err != nil {
 			util.LogErr("Error updating notification status", err)
@@ -36,7 +37,7 @@ func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 			return
 		}
 
-		responsePayload := ActionResponsePayload{
+		responsePayload := stream.ActionResponsePayload{
 			ActionType:     "message_history",
 			MessageHistory: messageHistory,
 		}
@@ -45,7 +46,7 @@ func (mb *MessageBroker) handleChangeRoom(p ActionPayload) {
 	}(mb.db, p, cli)
 }
 
-func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
+func (mb *MessageBroker) handleCreateDm(p stream.ActionPayload) {
 	// create room first
 	roomID, roomName, err := model.InsertDMRoom(mb.db, p.UserID, p.DMUserID)
 	if err != nil {
@@ -55,7 +56,7 @@ func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
 	// update group by RoomID
 	cli := mb.clientByID[p.UserID]
 	if mb.groupByRoomID[roomID] == nil {
-		mb.groupByRoomID[roomID] = make(map[uint]Client)
+		mb.groupByRoomID[roomID] = make(map[uint]stream.Client)
 	}
 	if mb.groupByRoomID[cli.RoomID()] != nil {
 		delete(mb.groupByRoomID[cli.RoomID()], p.UserID)
@@ -64,14 +65,14 @@ func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
 	mb.groupByRoomID[roomID][p.UserID] = cli
 
 	reciever, recieverActive := mb.clientByID[p.DMUserID]
-	responsePayload := ActionResponsePayload{
+	responsePayload := stream.ActionResponsePayload{
 		ActionType: "create_dm",
 		RoomID:     roomID,
 		RoomName:   roomName,
 		UserID:     p.UserID,
 	}
 
-	go func(responsePayload ActionResponsePayload, sender Client, reciever Client, recieverActive bool) {
+	go func(responsePayload stream.ActionResponsePayload, sender stream.Client, reciever stream.Client, recieverActive bool) {
 		// send new dm response to self to inform frontend of room name/id
 		sender.WriteActionQueue() <- responsePayload
 		// send new dm notification to target user if logged on
@@ -81,11 +82,11 @@ func (mb *MessageBroker) handleCreateDm(p ActionPayload) {
 	}(responsePayload, cli, reciever, recieverActive)
 }
 
-func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
+func (mb *MessageBroker) handleJoinRoom(p stream.ActionPayload) {
 	// update group by RoomID
 	cli := mb.clientByID[p.UserID]
 	if mb.groupByRoomID[p.NewRoomID] == nil {
-		mb.groupByRoomID[p.NewRoomID] = make(map[uint]Client)
+		mb.groupByRoomID[p.NewRoomID] = make(map[uint]stream.Client)
 	}
 	if mb.groupByRoomID[cli.RoomID()] != nil {
 		delete(mb.groupByRoomID[cli.RoomID()], p.UserID)
@@ -93,7 +94,7 @@ func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
 	cli.SetRoomID(p.NewRoomID)
 	mb.groupByRoomID[p.NewRoomID][p.UserID] = cli
 
-	go func(db *gorm.DB, p ActionPayload, cli Client) {
+	go func(db *gorm.DB, p stream.ActionPayload, cli stream.Client) {
 		model.InsertUserroom(db, p.UserID, p.NewRoomID, false)
 		messageHistory, err := model.GetAllMessagesFromRoom(db, p.NewRoomID)
 		if err != nil {
@@ -101,26 +102,25 @@ func (mb *MessageBroker) handleJoinRoom(p ActionPayload) {
 			return
 		}
 
-		responsePayload := ActionResponsePayload{
+		responsePayload := stream.ActionResponsePayload{
 			ActionType:     "message_history",
 			MessageHistory: messageHistory,
 		}
-
 		cli.WriteActionQueue() <- responsePayload
 	}(mb.db, p, cli)
 }
 
-func (mb *MessageBroker) handleCreateUser(p ActionPayload) {
+func (mb *MessageBroker) HandleCreateUser(p stream.ActionPayload) {
 	// make a copy of shared map structure
-	clientByIDCopy := make(map[uint]Client)
+	clientByIDCopy := make(map[uint]stream.Client)
 	for key, value := range mb.clientByID {
 		clientByIDCopy[key] = value
 	}
 	// handle database updates and channel communication in another routine
-	go func(db *gorm.DB, p ActionPayload, clientByIDCopy map[uint]Client) {
+	go func(db *gorm.DB, p stream.ActionPayload, clientByIDCopy map[uint]stream.Client) {
 		userName := model.GetUserNameByID(db, p.UserID)
 
-		responsePayload := ActionResponsePayload{
+		responsePayload := stream.ActionResponsePayload{
 			ActionType: "new_user",
 			UserID:     p.UserID,
 			UserName:   userName,
@@ -132,21 +132,21 @@ func (mb *MessageBroker) handleCreateUser(p ActionPayload) {
 	}(mb.db, p, clientByIDCopy)
 }
 
-func (mb *MessageBroker) handleCreateRoom(p ActionPayload) {
+func (mb *MessageBroker) handleCreateRoom(p stream.ActionPayload) {
 	// make a copy of shared map structure
-	clientByIDCopy := make(map[uint]Client)
+	clientByIDCopy := make(map[uint]stream.Client)
 	for key, value := range mb.clientByID {
 		clientByIDCopy[key] = value
 	}
 	// handle database updates and channel communication in another routine
-	func(db *gorm.DB, p ActionPayload, clientByIDCopy map[uint]Client) {
+	func(db *gorm.DB, p stream.ActionPayload, clientByIDCopy map[uint]stream.Client) {
 		roomID, err := model.InsertRoom(db, p.NewRoomName, 0)
 		if err != nil {
 			return // TODO: Better error handling
 		}
 		model.InsertUserroom(db, p.UserID, roomID, false)
 
-		responsePayload := ActionResponsePayload{
+		responsePayload := stream.ActionResponsePayload{
 			ActionType: "new_room",
 			UserID:     p.UserID,
 			RoomID:     roomID,

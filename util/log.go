@@ -12,5 +12,9 @@ func LogInfo(msg string) {
 
 // LogErr prints error statement to screen with timestamp.
 func LogErr(trace string, err error) {
-	fmt.Printf("[EROR][%s] %s - %s\n", time.Now(), trace, err.Error())
+	if err == nil {
+		fmt.Printf("[EROR][%s] %s \n", time.Now(), trace)
+	} else {
+		fmt.Printf("[EROR][%s] %s - %s\n", time.Now(), trace, err.Error())
+	}
 }
